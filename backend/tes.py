@@ -1,40 +1,29 @@
-from flask import Flask, request, jsonify
-import routeros_api
-
-app = Flask(__name__)
+import paramiko
 
 # Konfigurasi MikroTik
-MIKROTIK_HOST = "192.168.126.120"
-MIKROTIK_USER = "admin"
-MIKROTIK_PASSWORD = ""
+hostname = '192.168.126.120'  # IP MikroTik
+port = 22                  # Port SSH default
+username = 'admin'         # Username MikroTik
+password = ''      # Password MikroTik
 
-def add_ip_to_mikrotik(ip_address, interface):
-    try:
-        connection = routeros_api.RouterOsApiPool(
-            MIKROTIK_HOST, 
-            username=MIKROTIK_USER, 
-            password=MIKROTIK_PASSWORD,
-            port=8728
-        )
-        api = connection.get_api()
-        api.get_resource('/ip/address').add(address=ip_address, interface=interface)
-        connection.disconnect()
-        
-        return {"status": "success", "message": f"IP {ip_address} ditambahkan ke {interface}"}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
+# Membuat SSH Client
+client = paramiko.SSHClient()
+client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-@app.route('/add-ip', methods=['POST'])
-def add_ip():
-    data = request.json
-    ip_address = data.get("ip")
-    interface = data.get("interface")
+try:
+    # Koneksi ke MikroTik
+    client.connect(hostname, port=port, username=username, password=password)
+    print("Koneksi SSH ke MikroTik berhasil!")
 
-    if not ip_address or not interface:
-        return jsonify({"status": "error", "message": "IP dan Interface harus diisi"}), 400
+    # Menjalankan perintah sederhana di MikroTik
+    stdin, stdout, stderr = client.exec_command('/system resource print')
+    print(stdout.read().decode())  # Menampilkan hasil
 
-    result = add_ip_to_mikrotik(ip_address, interface)
-    return jsonify(result)
-
-if __name__ == '__main__':
-    app.run(debug=True, port=5002)
+except paramiko.AuthenticationException:
+    print("Autentikasi gagal. Periksa username/password.")
+except paramiko.SSHException as sshException:
+    print(f"Gagal koneksi SSH: {sshException}")
+except Exception as e:
+    print(f"Terjadi kesalahan: {e}")
+finally:
+    client.close()  # Tutup koneksi
