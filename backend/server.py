@@ -1,24 +1,26 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_socketio import SocketIO
 import mysql.connector
 import os
 import paramiko
 
 app = Flask(__name__)
 CORS(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
-# database
+# Database Configuration
 app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST', 'localhost')
 app.config['MYSQL_USER'] = os.getenv('MYSQL_USER', 'admin')
 app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD', 'ali123')
 app.config['MYSQL_DB'] = os.getenv('MYSQL_DB', 'client')
 
-# mikroTik
+# MikroTik Configuration
 MIKROTIK_HOST = os.getenv('MIKROTIK_HOST', '192.168.126.120')
 MIKROTIK_USER = os.getenv('MIKROTIK_USER', 'admin')
 MIKROTIK_PASS = os.getenv('MIKROTIK_PASS', '')
-    
-# koneksi ke database
+
+# Koneksi ke Database
 def get_db_connection():
     return mysql.connector.connect(
         host=app.config['MYSQL_HOST'],
@@ -27,18 +29,17 @@ def get_db_connection():
         database=app.config['MYSQL_DB']
     )
 
-# koneksi ke MikroTik via Paramiko
+# Koneksi ke MikroTik via Paramiko
 def connect_to_mikrotik():
     try:
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(MIKROTIK_HOST, username=MIKROTIK_USER, password=MIKROTIK_PASS)
-
         return ssh
     except Exception as e:
         raise Exception(f"Error connecting to MikroTik: {e}")
 
-# tambah IP ke MikroTik
+# Tambah IP ke MikroTik
 def add_ip_to_mikrotik(ip):
     try:
         ssh = connect_to_mikrotik()
@@ -49,10 +50,10 @@ def add_ip_to_mikrotik(ip):
     except Exception as e:
         raise Exception(f"Error adding IP to MikroTik: {e}")
 
+# 🔹 Tambah User (POST)
 @app.route('/add_user', methods=['POST'])
 def add_user():
     try:
-        # Ambil data dari request
         data = request.json
         nama = data.get('nama')
         username = data.get('username')
@@ -65,15 +66,13 @@ def add_user():
 
         connection = get_db_connection()
         with connection.cursor() as cursor:
-            query = """
-            INSERT INTO users (nama, username, passwd, ip, alamat)
-            VALUES (%s, %s, %s, %s, %s)
-            """
+            query = "INSERT INTO users (nama, username, passwd, ip, alamat) VALUES (%s, %s, %s, %s, %s)"
             cursor.execute(query, (nama, username, passwd, ip, alamat))
             connection.commit()
 
-        # Koneksi ke MikroTik dan tambahkan IP
+        # Tambahkan IP ke MikroTik
         add_ip_to_mikrotik(ip)
+        socketio.emit('add_user')
 
         return jsonify({"message": "Data berhasil ditambahkan!"}), 201
 
@@ -82,18 +81,43 @@ def add_user():
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 
+# 🔹 Ambil Semua User (GET)
 @app.route('/get_users', methods=['GET'])
 def get_users():
     try:
         connection = get_db_connection()
         with connection.cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT id, nama, username, ip, alamat FROM users")
+            cursor.execute("SELECT * FROM users")
             users = cursor.fetchall()
-
         return jsonify(users), 200
 
     except mysql.connector.Error as err:
         return jsonify({"message": f"Error database: {err}"}), 500
 
+# 🔹 Update User (PUT)
+@app.route('/update_users/<int:user_id>', methods=['PUT'])
+def update_users(user_id):
+    try:
+        data = request.json
+        connection = get_db_connection()
+
+        with connection.cursor() as cursor:
+            sql = """
+                UPDATE users 
+                SET nama=%s, username=%s, passwd=%s, ip=%s, alamat=%s 
+                WHERE id=%s
+            """
+            values = (data['nama'], data['username'], data['passwd'], data['ip'], data['alamat'], user_id)
+            cursor.execute(sql, values)
+            connection.commit()
+
+            socketio.emit('update_users')
+
+        return jsonify({"message": "User berhasil diperbarui!"}), 200
+
+    except mysql.connector.Error as err:
+        return jsonify({"message": f"Error Database: {err}"}), 500
+
+# Jalankan Flask
 if __name__ == '__main__':
     app.run(debug=True)

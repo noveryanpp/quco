@@ -1,70 +1,152 @@
 import { Fragment, useState, useEffect } from 'react';
 import './index.css';
-import Modal from './components/Modal';
+import { Search } from "lucide-react";
+import Modaladd from './components/Modaladd';
+import Modalshow from './components/Modalshow';
 import axios from 'axios';
+import { io } from 'socket.io-client';
+import logo from './assets/image/logo.png';
 
 export default function Table() {
-  const [showModal, setShowModal] = useState(false);
-  const [users, setUsers] = useState([]);  // State untuk menyimpan data pengguna
+  const [showModaladd, setShowModaladd] = useState(false);
+  const [showModalshow, setShowModalshow] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [users, setUsers] = useState([]);  
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 7;
+
+  // Fetch Data Function
+  const fetchData = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/get_users');
+      setUsers(response.data);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  };
 
   useEffect(() => {
-    // Mengambil data pengguna dari backend
-    const fetchData = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/get_users');
-        setUsers(response.data);  // Menyimpan data yang diterima ke state
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
+    const socket = io('http://localhost:5000');
 
+    socket.on('update_users', fetchData);
+    socket.on('add_user', fetchData);
+
+    return () => socket.disconnect();
+  }, []);
+
+  useEffect(() => {
     fetchData();
-  }, []);  // Menjalankan sekali ketika komponen dimuat
+  }, []);
+
+  const filtereduser = users.filter(user => 
+    user.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.ip.includes(searchQuery)
+  );
+
+  const totalPages = Math.ceil(filtereduser.length / usersPerPage);
+  const lastindex = currentPage * usersPerPage;
+  const firstindex = lastindex - usersPerPage;
+  const currentUsers = filtereduser.slice(firstindex, lastindex);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   return (
     <Fragment>
-      <div className='pt-14 pr-40 pl-40 h-screen bg-gray-100'>
-          <div className="mb-4 flex flex-col">
-            <nav className="text-gray-500 text-sm mb-2">
-              <span>Categories</span> <span className="mx-1">›</span> <span>Create</span>
-            </nav>
-            <div className="flex justify-between items-center">
-              <h1 className="text-3xl font-semibold">Client</h1>
-              <button onClick={() => setShowModal(true)} className="bg-blue-500 text-white px-4 py-2 rounded-md">Input</button>
+      <div className='pt-32 pr-40 pl-40 w-screen h-screen'>
+        <div className="mb-4 flex flex-col">
+          <div className="flex items-center space-x-2">
+            <img src={logo} alt="logo" className="w-44 absolute top-12 left-28" />
+          </div>
+          <div className="flex justify-between items-center">
+            <h1 className="pl-5 text-3xl font-semibold">Pelanggan</h1>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white w-5 h-5" />
+              <input 
+                type="text" 
+                placeholder="Cari..." 
+                value={searchQuery} 
+                onChange={(e) => setSearchQuery(e.target.value)} 
+                className="bg-[#2D383C] text-left pl-10 pr-20 py-2 rounded-md placeholder:text-sm text-white w-full"
+              />
+            </div>
+            <div className='pr-5'>              
+              <button onClick={() => setShowModaladd(true)} className="bg-[#39ACE7] font-semibold text-white px-4 py-2 rounded-md">
+                Tambah
+              </button>
             </div>
           </div>
+        </div>
+
+        {/* Tabel data */}
         <div className='rounded-lg overflow-auto shadow'>
           <table className='w-full'>
-            <thead className='bg-gray-50 border-b-2 border-gray-200'>
+            <thead className='bg-[#414C50] border-b-2 border-[#192428]'>
               <tr>
-                <th className='p-3 text-sm font-semibold tracking-wide text-left'>No.</th>
-                <th className='p-3 text-sm font-semibold tracking-wide text-left'>Nama</th>
-                <th className='p-3 text-sm font-semibold tracking-wide text-left'>Username</th>
-                <th className='p-3 text-sm font-semibold tracking-wide text-left'>IP Address</th>
-                <th className='p-3 text-sm font-semibold tracking-wide text-left w-1/3'>Alamat</th>
+                <th className='p-3 text-white text-sm font-semibold tracking-wide text-left'>No.</th>
+                <th className='p-3 text-white text-sm font-semibold tracking-wide text-left'>Nama</th>
+                <th className='p-3 text-white text-sm font-semibold tracking-wide text-left'>Username</th>
+                <th className='p-3 text-white text-sm font-semibold tracking-wide text-left'>IP Address</th>
+                <th className='p-3 text-white text-sm font-semibold tracking-wide text-left w-1/3'>Alamat</th>
               </tr>
             </thead>
-            <tbody>
-              {users.length > 0 ? (
-                users.map((user, index) => (
-                  <tr key={user.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className='p-3 text-sm text-gray-700'>{index + 1}</td>
-                    <td className='p-3 text-sm text-gray-700'>{user.nama}</td> {/* Nama */}
-                    <td className='p-3 text-sm text-gray-700'>{user.username}</td> {/* Username */}
-                    <td className='p-3 text-sm text-gray-700'>{user.ip}</td> {/* IP Address */}
-                    <td className='p-3 text-sm text-gray-700'>{user.alamat}</td> {/* Alamat */}
+            <tbody className='bg-[#2D383C]'>
+              {currentUsers.length > 0 ? (
+                currentUsers.map((user, index) => (
+                  <tr 
+                    key={user.id} 
+                    className="bg-[#2D383C] hover:bg-[#414C50] cursor-pointer"  
+                    onClick={() => { setSelectedUser(user); setShowModalshow(true); }}
+                  >
+                    <td className='p-3 text-sm text-white'>{firstindex + index + 1}</td>
+                    <td className='p-3 text-sm text-white'>{user.nama}</td>
+                    <td className='p-3 text-sm text-white'>{user.username}</td>
+                    <td className='p-3 text-sm text-white'>{user.ip}</td>
+                    <td className='p-3 text-sm text-white'>{user.alamat}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="p-3 text-sm text-gray-700 text-center">No data available</td>
+                  <td colSpan="5" className="p-3 text-sm text-white text-center">No data available</td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        <div className="flex justify-center mt-4 space-x-2">
+          <button 
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} 
+            className="px-3 py-1 bg-[#39ACE7] text-white rounded disabled:bg-[#2D383C]" 
+            disabled={currentPage === 1}
+          >
+            Prev
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button 
+              key={i} 
+              onClick={() => setCurrentPage(i + 1)} 
+              className={`px-3 py-1 rounded ${currentPage === i + 1 ? "bg-[#414C50] text-white" : "bg-[#2D383C] text-white" }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+          <button 
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} 
+            className="px-3 py-1 bg-[#39ACE7] text-white rounded disabled:bg-[#2D383C]" 
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </button>
+        </div>
       </div>
-      <Modal isvisible={showModal} onClose={() => setShowModal(false)} />
+
+      <Modaladd isvisible={showModaladd} onClose={() => setShowModaladd(false)} />
+      {selectedUser && <Modalshow isVisible={showModalshow} user={selectedUser} onClose={() => setShowModalshow(false)} />}
     </Fragment>
   );
 }
