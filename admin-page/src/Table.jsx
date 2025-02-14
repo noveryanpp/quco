@@ -29,8 +29,9 @@ export default function Table() {
   useEffect(() => {
     const socket = io('http://localhost:5000');
 
-    socket.on('update_users', fetchData);
+    socket.on('update_user', fetchData);
     socket.on('add_user', fetchData);
+    socket.on('delete_user', fetchData);
 
     return () => socket.disconnect();
   }, []);
@@ -145,7 +146,7 @@ export default function Table() {
         </div>
       </div>
 
-      <Modaladd isvisible={showModaladd} onClose={() => setShowModaladd(false)} />
+      <Modaladd isvisible={showModaladd} onClose={() => { setShowModaladd(false); fetchData(); }} />
       {selectedUser && <Modalshow isVisible={showModalshow} user={selectedUser} onClose={() => setShowModalshow(false)} />}
     </Fragment>
   );

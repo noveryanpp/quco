@@ -50,7 +50,7 @@ def add_ip_to_mikrotik(ip):
     except Exception as e:
         raise Exception(f"Error adding IP to MikroTik: {e}")
 
-# 🔹 Tambah User (POST)
+# Tambah User
 @app.route('/add_user', methods=['POST'])
 def add_user():
     try:
@@ -72,7 +72,13 @@ def add_user():
 
         # Tambahkan IP ke MikroTik
         add_ip_to_mikrotik(ip)
-        socketio.emit('add_user')
+        socketio.emit('add_user', {
+            "nama": nama,
+            "username": username,
+            "passwd" : passwd,
+            "ip": ip,
+            "alamat": alamat
+        })
 
         return jsonify({"message": "Data berhasil ditambahkan!"}), 201
 
@@ -81,7 +87,7 @@ def add_user():
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 
-# 🔹 Ambil Semua User (GET)
+# Ambil Semua User
 @app.route('/get_users', methods=['GET'])
 def get_users():
     try:
@@ -94,8 +100,8 @@ def get_users():
     except mysql.connector.Error as err:
         return jsonify({"message": f"Error database: {err}"}), 500
 
-# 🔹 Update User (PUT)
-@app.route('/update_users/<int:user_id>', methods=['PUT'])
+# Update User
+@app.route('/update_user/<int:user_id>', methods=['PUT'])
 def update_users(user_id):
     try:
         data = request.json
@@ -111,10 +117,27 @@ def update_users(user_id):
             cursor.execute(sql, values)
             connection.commit()
 
-            socketio.emit('update_users')
+            socketio.emit('update_user')
 
         return jsonify({"message": "User berhasil diperbarui!"}), 200
 
+    except mysql.connector.Error as err:
+        return jsonify({"message": f"Error Database: {err}"}), 500
+
+@app.route('/delete_user/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    try:
+        connection = get_db_connection()
+        
+        with connection.cursor() as cursor:
+            sql = "DELETE FROM users WHERE id=%s"
+            cursor.execute(sql, (user_id,))
+            connection.commit()
+            
+            socketio.emit('delete_user')
+        
+        return jsonify({"message": "User berhasil dihapus!"}), 200
+    
     except mysql.connector.Error as err:
         return jsonify({"message": f"Error Database: {err}"}), 500
 

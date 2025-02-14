@@ -4,14 +4,12 @@ import React, { useState, useEffect } from 'react';
 export default function Modalshow({ isVisible, onClose, user }) {
   if (!isVisible || !user) return null;
 
-  // State untuk menyimpan perubahan data
   const [nama, setNama] = useState('');
   const [username, setUsername] = useState('');
   const [passwd, setPasswd] = useState('');
   const [ip, setIp] = useState('');
   const [alamat, setAlamat] = useState('');
 
-  // Update state saat user berubah
   useEffect(() => {
     if (user) {
       setNama(user.nama || '');
@@ -26,11 +24,21 @@ export default function Modalshow({ isVisible, onClose, user }) {
     const updatedUser = { nama, username, passwd, ip, alamat };
 
     try {
-      await axios.put(`http://localhost:5000/update_users/${user.id}`, updatedUser);
+      await axios.put(`http://localhost:5000/update_user/${user.id}`, updatedUser);
       console.log('Data berhasil diperbarui');
       onClose();
     } catch (error) {
       console.error('Gagal memperbarui data:', error);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`http://localhost:5000/delete_user/${user.id}`);
+      console.log('User berhasil dihapus');
+      onClose();
+    } catch (error) {
+      console.error('Gagal menghapus user:', error);
     }
   };
 
@@ -63,9 +71,10 @@ export default function Modalshow({ isVisible, onClose, user }) {
 
         <div className="flex justify-between mt-4">
           <button onClick={onClose} className="px-4 py-2 bg-gray-600 text-white rounded">Tutup</button>
-          <button onClick={handleSave} className="px-4 py-2 bg-[#39ACE7] text-white rounded">
-            Simpan
-          </button>
+          <div className='flex justify-end gap-2'>
+            <button onClick={handleDelete} className='px-4 py-2 bg-red-700 text-white rounded'>Hapus</button>
+            <button onClick={handleSave} className="px-4 py-2 bg-[#39ACE7] text-white rounded">Simpan</button>
+          </div>
         </div>
       </div>
     </div>
