@@ -18,8 +18,7 @@ const Modaladd = ({ isvisible, onClose }) => {
       const response = await axios.post('http://localhost:5000/add_user', adduser);
       console.log(response.data);
       onClose();
-      window.location.reload(); // Cara cepat (opsional)
-      // ATAU gunakan prop callback untuk fetch data
+      window.location.reload();
     } catch (error) {
       console.error('Error:', error);
     }

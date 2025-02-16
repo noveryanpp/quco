@@ -1,6 +1,6 @@
 import { Fragment, useState, useEffect } from 'react';
 import './index.css';
-import { Search } from "lucide-react";
+import { Search, User, Settings, LogOut } from "lucide-react";
 import Modaladd from './components/Modaladd';
 import Modalshow from './components/Modalshow';
 import axios from 'axios';
@@ -14,9 +14,10 @@ export default function Table() {
   const [searchQuery, setSearchQuery] = useState("");
   const [users, setUsers] = useState([]);  
   const [currentPage, setCurrentPage] = useState(1);
+  const [openDropdown, setOpenDropdown] = useState(false);
   const usersPerPage = 7;
 
-  // Fetch Data Function
+  // Fetch Data
   const fetchData = async () => {
     try {
       const response = await axios.get('http://localhost:5000/get_users');
@@ -27,40 +28,64 @@ export default function Table() {
   };
 
   useEffect(() => {
-    const socket = io('http://localhost:5000');
-
-    socket.on('update_user', fetchData);
-    socket.on('add_user', fetchData);
-    socket.on('delete_user', fetchData);
-
-    return () => socket.disconnect();
-  }, []);
-
-  useEffect(() => {
     fetchData();
   }, []);
 
-  const filtereduser = users.filter(user => 
+  useEffect(() => {
+    const socket = io('http://localhost:5000');
+
+    const handleUpdate = () => fetchData();
+    socket.on('update_user', handleUpdate);
+    socket.on('add_user', handleUpdate);
+    socket.on('delete_user', handleUpdate);
+
+    return () => {
+      socket.off('update_user', handleUpdate);
+      socket.off('add_user', handleUpdate);
+      socket.off('delete_user', handleUpdate);
+      socket.disconnect();
+    };
+  }, []);
+
+  const filteredUsers = users.filter(user => 
     user.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.ip.includes(searchQuery)
   );
 
-  const totalPages = Math.ceil(filtereduser.length / usersPerPage);
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
   const lastindex = currentPage * usersPerPage;
   const firstindex = lastindex - usersPerPage;
-  const currentUsers = filtereduser.slice(firstindex, lastindex);
+  const currentUsers = filteredUsers.slice(firstindex, lastindex);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.replace("/");
+  };
+
   return (
     <Fragment>
       <div className='pt-32 pr-40 pl-40 w-screen h-screen'>
         <div className="mb-4 flex flex-col">
-          <div className="flex items-center space-x-2">
-            <img src={logo} alt="logo" className="w-44 absolute top-12 left-28" />
+          <div className="flex items-center space-x-2 relative">
+            <img src={logo} alt="logo" className="w-44 absolute right-[88%] bottom-5" />
+            <User 
+              className="w-10 h-10 bottom-5 right-1 absolute text-white cursor-pointer hover:text-gray-300" 
+              onClick={() => setOpenDropdown(!openDropdown)}
+            />
+            {openDropdown && (
+              <div className="absolute right-0 bg-white shadow-md rounded-md w-36">
+                <ul className="py-2">
+                  <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center text-black" onClick={handleLogout}>
+                    <LogOut className="w-5 h-5 mr-2" /> Logout
+                  </li>
+                </ul>
+              </div>
+            )}
           </div>
           <div className="flex justify-between items-center">
             <h1 className="pl-5 text-3xl font-semibold">Pelanggan</h1>
@@ -120,29 +145,11 @@ export default function Table() {
 
         {/* Pagination */}
         <div className="flex justify-center mt-4 space-x-2">
-          <button 
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} 
-            className="px-3 py-1 bg-[#39ACE7] text-white rounded disabled:bg-[#2D383C]" 
-            disabled={currentPage === 1}
-          >
-            Prev
-          </button>
+          <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} className="px-3 py-1 bg-[#39ACE7] text-white rounded disabled:bg-[#2D383C]" disabled={currentPage === 1}>Prev</button>
           {Array.from({ length: totalPages }, (_, i) => (
-            <button 
-              key={i} 
-              onClick={() => setCurrentPage(i + 1)} 
-              className={`px-3 py-1 rounded ${currentPage === i + 1 ? "bg-[#414C50] text-white" : "bg-[#2D383C] text-white" }`}
-            >
-              {i + 1}
-            </button>
+            <button key={i} onClick={() => setCurrentPage(i + 1)} className={`px-3 py-1 rounded ${currentPage === i + 1 ? "bg-[#414C50] text-white" : "bg-[#2D383C] text-white" }`}>{i + 1}</button>
           ))}
-          <button 
-            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} 
-            className="px-3 py-1 bg-[#39ACE7] text-white rounded disabled:bg-[#2D383C]" 
-            disabled={currentPage === totalPages}
-          >
-            Next
-          </button>
+          <button onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} className="px-3 py-1 bg-[#39ACE7] text-white rounded disabled:bg-[#2D383C]" disabled={currentPage === totalPages}>Next</button>
         </div>
       </div>
 
