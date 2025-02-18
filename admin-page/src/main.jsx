@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import './index.css';
 import Table from './Table.jsx';
 import Login from './Login.jsx';
+import Paket from './Paket.jsx';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -23,6 +24,7 @@ function App() {
         <Routes>
           <Route path="/" element={ isAuthenticated ? <Navigate to="/table" /> : <Login onLoginSuccess={() => setIsAuthenticated(true)} /> }/>
           <Route path="/table" element={isAuthenticated ? <Table onLogout={handleLogout} /> : <Navigate to="/" />}/>
+          <Route path="/paket" element={isAuthenticated ? <Paket /> : <Navigate to="/" />} />
         </Routes>
       </Router>
     </StrictMode>
