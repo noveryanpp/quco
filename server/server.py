@@ -6,6 +6,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_socketio import SocketIO
 from pathlib import Path
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 
 import paramiko.client
 
@@ -28,11 +29,6 @@ MIKROTIK_HOST = os.getenv('MIKROTIK_HOST')
 MIKROTIK_USER = os.getenv('MIKROTIK_USER')
 MIKROTIK_PASS = os.getenv('MIKROTIK_PASS')
 
-@app.route('/')
-@app.route('/wireless')
-def index():
-    return "Hello, World!"
-
 def get_db_connection():
     return mysql.connector.connect(
         host=app.config['MYSQL_HOST'],
@@ -40,6 +36,33 @@ def get_db_connection():
         password=app.config['MYSQL_PASSWORD'],
         database=app.config['MYSQL_DB']
     )
+    
+jwt = JWTManager(app)
+
+@app.route("/login", methods=["POST"])
+def login():
+    
+    data = request.get_json()
+    username = data.get("username")
+    password = data.get("password")
+
+    connection = get_db_connection()
+    with connection.cursor() as cursor:
+        query = "SELECT * FROM admin WHERE username = %s AND password = %s"
+        cursor.execute(query, (username, password))
+        user = cursor.fetchone()
+
+    if not user:
+        return jsonify({"msg": "Username atau password salah!"}), 401
+
+    access_token = create_access_token(identity=username)
+    return jsonify(access_token=access_token)
+
+@app.route("/protected", methods=["GET"])
+@jwt_required()
+def protected():
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
     
 def runAdminCommand(command):
     try:
