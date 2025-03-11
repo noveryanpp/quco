@@ -16,8 +16,215 @@ load_dotenv(dotenv_path=dotenv_path)
 app = Flask(__name__)
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
+# atur login
+@app.route('/add_admin', methods=['POST'])
+def add_admin():
+    try:
+        data = request.json
+        name = data.get('name')
+        username = data.get('username')
+        password = data.get('password')
+        email = data.get('email')
 
+        if not all([name, username, password, email]):
+            return jsonify({"message": "Semua data wajib diisi!"}), 400
 
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            query = """
+                INSERT INTO admin (name, username, password, email)
+                VALUES (%s, %s, %s, %s)
+            """
+            cursor.execute(query, (name, username, password, email))
+            connection.commit()
+
+        return jsonify({"message": "Admin berhasil ditambahkan!"}), 201
+
+    except mysql.connector.Error as err:
+        return jsonify({"message": f"Error database: {err}"}), 500
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+# Edit Name
+@app.route('/update_name', methods=['PUT'])
+@jwt_required()
+def update_name():
+    try:
+        data = request.json
+        current_username = get_jwt_identity()  # Ambil username dari token JWT
+        new_name = data.get('new_name')
+
+        if not new_name:
+            return jsonify({"message": "Nama baru wajib diisi!"}), 400
+
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            # Update nama berdasarkan username yang sedang login
+            update_query = "UPDATE users SET name = %s WHERE username = %s"
+            cursor.execute(update_query, (new_name, current_username))
+            connection.commit()
+
+        return jsonify({"message": "Nama berhasil diperbarui!"}), 200
+
+    except mysql.connector.Error as err:
+        return jsonify({"message": f"Error Database: {err}"}), 500
+
+# Edit username
+@app.route('/update_username', methods=['PUT'])
+@jwt_required()
+def update_username():
+    try:
+        data = request.json
+        current_username = get_jwt_identity()  # Ambil username dari token JWT
+        new_username = data.get('new_username')
+
+        if not new_username:
+            return jsonify({"message": "Username baru wajib diisi!"}), 400
+
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            # Cek apakah username baru sudah dipakai
+            query_check = "SELECT username FROM users WHERE username = %s"
+            cursor.execute(query_check, (new_username,))
+            existing_user = cursor.fetchone()
+
+            if existing_user:
+                return jsonify({"message": "Username sudah digunakan!"}), 400
+
+            # Update username
+            update_query = "UPDATE users SET username = %s WHERE username = %s"
+            cursor.execute(update_query, (new_username, current_username))
+            connection.commit()
+
+        return jsonify({"message": "Username berhasil diperbarui!"}), 200
+
+    except mysql.connector.Error as err:
+        return jsonify({"message": f"Error Database: {err}"}), 500
+
+# Edit Password
+@app.route('/update_password', methods=['PUT'])
+@jwt_required()
+def update_password():
+    try:
+        data = request.json
+        username = get_jwt_identity()  # Ambil username dari token JWT
+        old_password = data.get('old_password')
+        new_password = data.get('new_password')
+
+        if not old_password or not new_password:
+            return jsonify({"message": "Password lama dan baru wajib diisi!"}), 400
+
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            # Cek apakah password lama cocok
+            query = "SELECT password FROM users WHERE username = %s"
+            cursor.execute(query, (username,))
+            user = cursor.fetchone()
+
+            if not user or user[0] != old_password:
+                return jsonify({"message": "Password lama salah!"}), 401
+
+            # Update password baru
+            update_query = "UPDATE users SET password = %s WHERE username = %s"
+            cursor.execute(update_query, (new_password, username))
+            connection.commit()
+
+        return jsonify({"message": "Password berhasil diperbarui!"}), 200
+
+    except mysql.connector.Error as err:
+        return jsonify({"message": f"Error Database: {err}"}), 500
+# Edit ip 
+@app.route('/update_ip', methods=['PUT'])
+@jwt_required()
+def update_ip():
+    try:
+        data = request.json
+        current_username = get_jwt_identity()  # Ambil username dari token JWT
+        new_ip = data.get('new_ip')
+
+        if not new_ip:
+            return jsonify({"message": "IP baru wajib diisi!"}), 400
+
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            # Update IP berdasarkan username yang sedang login
+            update_query = "UPDATE users SET ip = %s WHERE username = %s"
+            cursor.execute(update_query, (new_ip, current_username))
+            connection.commit()
+
+        return jsonify({"message": "IP berhasil diperbarui!"}), 200
+
+    except mysql.connector.Error as err:
+        return jsonify({"message": f"Error Database: {err}"}), 500
+# Edit Mac
+@app.route('/update_mac', methods=['PUT'])
+@jwt_required()
+def update_mac():
+    try:
+        data = request.json
+        current_username = get_jwt_identity()  # Ambil username dari token JWT
+        new_mac = data.get('new_mac')
+
+        if not new_mac:
+            return jsonify({"message": "MAC Address baru wajib diisi!"}), 400
+
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            # Update MAC Address berdasarkan username yang sedang login
+            update_query = "UPDATE users SET mac = %s WHERE username = %s"
+            cursor.execute(update_query, (new_mac, current_username))
+            connection.commit()
+
+        return jsonify({"message": "MAC Address berhasil diperbarui!"}), 200
+
+    except mysql.connector.Error as err:
+        return jsonify({"message": f"Error Database: {err}"}), 500
+# Edit Address
+@app.route('/update_address', methods=['PUT'])
+@jwt_required()
+def update_address():
+    try:
+        data = request.json
+        current_username = get_jwt_identity()  # Ambil username dari token JWT
+        new_address = data.get('new_address')
+
+        if not new_address:
+            return jsonify({"message": "Address baru wajib diisi!"}), 400
+
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            # Update Address berdasarkan username yang sedang login
+            update_query = "UPDATE users SET address = %s WHERE username = %s"
+            cursor.execute(update_query, (new_address, current_username))
+            connection.commit()
+
+        return jsonify({"message": "Address berhasil diperbarui!"}), 200
+
+    except mysql.connector.Error as err:
+        return jsonify({"message": f"Error Database: {err}"}), 500
+# Edit Phone
+@app.route('/update_phone', methods=['PUT'])
+@jwt_required()
+def update_phone():
+    try:
+        data = request.json
+        current_username = get_jwt_identity()  # Ambil username dari token JWT
+        new_phone = data.get('new_phone')
+
+        if not new_phone:
+            return jsonify({"message": "Nomor telepon baru wajib diisi!"}), 400
+
+        connection = get_db_connection()
+        with connection.cursor() as cursor:
+            # Update Phone berdasarkan username yang sedang login
+            update_query = "UPDATE users SET phone = %s WHERE username = %s"
+            cursor.execute(update_query, (new_phone, current_username))
+            connection.commit()
+
+        return jsonify({"message": "Nomor telepon berhasil diperbarui!"}), 200
+
+    except mysql.connector.Error as err:
+        return jsonify({"message": f"Error Database: {err}"}), 500
+ 
 # Database Configuration
 app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST')
 app.config['MYSQL_USER'] = os.getenv('MYSQL_USER')
