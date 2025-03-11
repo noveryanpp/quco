@@ -34,6 +34,19 @@ def get_users():
 
     except Exception as e:
         return jsonify({"message": str(e)}), 500
+    
+@user_routes.route('/get_user/<int:user_id>', methods=['GET'])
+def get_user(user_id):
+    
+    try:
+        connection = get_db_connection()
+        with connection.cursor(dictionary=True) as cursor:
+            cursor.execute("SELECT * FROM users where id=%s", user_id)
+            users = cursor.fetchall()
+        return jsonify(users), 200
+
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
 
 # Update User
 @user_routes.route('/update_user/<int:user_id>', methods=['PUT'])

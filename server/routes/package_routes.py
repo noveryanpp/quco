@@ -72,3 +72,4 @@ def delete_paket(paket_id):
     
     except Exception as e:
         return jsonify({"message": str(e)}), 500
+    

@@ -1,8 +1,22 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 from mikrotik import runCommand, parseOutput
+from user_routes import get_user
 
 mikrotik_routes = Blueprint("mikrotik_routes", __name__)
+
+@mikrotik_routes.route('tambah_paket_user/<int:paket_id>', methods=['POST'])
+def tambah_paket_user(paket_id):
+    user_id = request.json
+    user_data = get_user(user_id)
+    
+    
+    command1 = '''/ip firewall filter add chain=forward src-address={user_data.ip} action=accept comment="{user_data.username} Internet Access"
+                /queue simple add name=limit_{user_data.username} target={user_data.ip} max-limit={speed}/{speed};
+                /system scheduler add name=block_{user_data.user} start-date=[/system clock get date] start-time=00:00 interval={limit}d on-event="/ip firewall filter disable [find comment=\"{user_data.username} Internet Access\"]"
+                '''
+    
+    # command1 = '/ip firewall filter add chain=forward src-address=192.168.1.100 out-interface=ether1 action=drop'
 
 
 @mikrotik_routes.route('/api/mikrotik/ip/get')
