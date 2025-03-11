@@ -244,10 +244,12 @@ def get_db_connection():
         database=app.config['MYSQL_DB']
     )
     
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
+
 jwt = JWTManager(app)
 
-@app.route("/login", methods=["POST"])
-def login():
+@app.route("/admin/login", methods=["POST"])
+def adminLogin():
     
     data = request.get_json()
     username = data.get("username")
@@ -256,6 +258,25 @@ def login():
     connection = get_db_connection()
     with connection.cursor() as cursor:
         query = "SELECT * FROM admin WHERE username = %s AND password = %s"
+        cursor.execute(query, (username, password))
+        user = cursor.fetchone()
+
+    if not user:
+        return jsonify({"msg": "Username atau password salah!"}), 401
+
+    access_token = create_access_token(identity=username)
+    return jsonify(access_token=access_token)
+
+@app.route("/auth/login", methods=["POST"])
+def login():
+    
+    data = request.get_json()
+    username = data.get("username")
+    password = data.get("password")
+
+    connection = get_db_connection()
+    with connection.cursor() as cursor:
+        query = "SELECT * FROM users WHERE username = %s AND passwd = %s"
         cursor.execute(query, (username, password))
         user = cursor.fetchone()
 
