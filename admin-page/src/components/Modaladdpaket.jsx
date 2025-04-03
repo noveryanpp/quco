@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const Modaladdpaket = ({ visible, onClose }) => {
-  const [nama, setNama] = useState('');
+  const [name, setName] = useState('');
   const [kecepatan, setKecepatan] = useState('');
   const [harga, setHarga] = useState('');
   const [masa_aktif, setMasa_aktif] = useState('');
@@ -13,13 +13,13 @@ const Modaladdpaket = ({ visible, onClose }) => {
 
   const handleSubmitpkt = async (e) => {
     e.preventDefault();
-    const addPaket = { nama, kecepatan, harga, masa_aktif };
+    const addPaket = { name, kecepatan, harga, masa_aktif };
   
     try {
       const response = await axios.post('http://localhost:5000/add_paket', addPaket);
       console.log(response.data);
       
-      setNama('');
+      setName('');
       setKecepatan('');
       setHarga('');
       setMasa_aktif('');
@@ -37,7 +37,7 @@ const Modaladdpaket = ({ visible, onClose }) => {
         <h2 className="text-2xl font-bold text-center mb-4">Tambah Paket</h2>
         <form onSubmit={handleSubmitpkt}>
           <label className="block mb-2 font-semibold text-base">Nama Paket</label>
-          <input type="text" className="w-full p-2 mb-4 rounded bg-[#414C50] text-white" placeholder="Nama Paket" value={nama} onChange={(e) => setNama(e.target.value)}/>
+          <input type="text" className="w-full p-2 mb-4 rounded bg-[#414C50] text-white" placeholder="Nama Paket" value={name} onChange={(e) => setName(e.target.value)}/>
           
           <label className="block mb-2 font-semibold text-base">Kecepatan</label>
           <input type="text" className="w-full p-2 mb-4 rounded bg-[#414C50] text-white" placeholder="Kecepatan" value={kecepatan} onChange={(e) => setKecepatan(e.target.value)}/>

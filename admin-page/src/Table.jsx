@@ -50,7 +50,7 @@ export default function Table() {
   }, []);
 
   const filteredUsers = users.filter(user => 
-    user.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.ip.includes(searchQuery)
   );
@@ -113,6 +113,7 @@ export default function Table() {
                 <th className='p-3 text-white text-sm font-semibold tracking-wide text-left'>Username</th>
 		            <th className='p-3 text-white text-sm font-semibold tracking-wide text-left'>No.Telp</th>
                 <th className='p-3 text-white text-sm font-semibold tracking-wide text-left'>IP Address</th>
+                <th className='p-3 text-white text-sm font-semibold tracking-wide text-left'>MAC Address</th>
                 <th className='p-3 text-white text-sm font-semibold tracking-wide text-left w-1/3'>Alamat</th>
               </tr>
             </thead>
@@ -121,11 +122,12 @@ export default function Table() {
                 currentUsers.map((user, index) => (
                   <tr key={user.id} className="bg-[#2D383C] hover:bg-[#414C50] cursor-pointer" onClick={() => { setSelectedUser(user); setShowModalshow(true); }}>
                     <td className='p-3 text-sm text-white'>{firstindex + index + 1}</td>
-                    <td className='p-3 text-sm text-white'>{user.nama}</td>
+                    <td className='p-3 text-sm text-white'>{user.name}</td>
                     <td className='p-3 text-sm text-white'>{user.username}</td>
-		                <td className='p-3 text-sm text-white'>{user.notelp}</td>
+		                <td className='p-3 text-sm text-white'>{user.phone}</td>
                     <td className='p-3 text-sm text-white'>{user.ip}</td>
-                    <td className='p-3 text-sm text-white'>{user.alamat}</td>
+                    <td className='p-3 text-sm text-white'>{user.mac}</td>
+                    <td className='p-3 text-sm text-white'>{user.address}</td>
                   </tr>
                 ))
               ) : (

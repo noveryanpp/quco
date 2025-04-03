@@ -1,20 +1,68 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 
 export function NetworkInfo() {
+	const [ssid, setSsid] = useState("");
+	const [password, setPassword] = useState("");
+	const [deviceCount, setDeviceCount] = useState(0);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await fetch("http://localhost:5000/api/mikrotik/wlan/get");
+                const data = await response.json();
+                setSsid(data.SSID || "Tidak ditemukan");
+            } catch (error) {
+                console.error("Error fetching SSID:", error);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+
+    useEffect(() => {
+        const fetchSecurity = async () => {
+            try {
+                const response = await fetch("http://localhost:5000/api/mikrotik/security/get");
+                const data = await response.json();
+                setPassword(data["wpa2-pre-shared-key"] || "N/A");
+            } catch (error) {
+                console.error("Error fetching security data:", error);
+            }
+        };
+
+        fetchSecurity();
+    }, []);
+
+
+    useEffect(() => {
+        const fetchDevices = async () => {
+            try {
+                const response = await fetch("http://localhost:5000/api/mikrotik/device/get");
+                const data = await response.json();
+                setDeviceCount(data.connected_devices);
+            } catch (error) {
+                console.error("Error fetching device data:", error);
+            }
+        };
+
+        fetchDevices();
+    }, []);
+
 	return (
 		<View style={styles.container}>
 			<View style={styles.infoItem}>
 				<Text style={styles.label}>SSID: </Text>
-				<Text style={styles.value}>labpemroo</Text>
+				<Text style={styles.value}>{ssid}</Text>
 			</View>
 			<View style={styles.infoItem}>
 				<Text style={styles.label}>Password: </Text>
-				<Text style={styles.value}>********</Text>
+				<Text style={styles.value}>{password}</Text>
 			</View>
 			<View style={styles.infoItem}>
 				<Text style={styles.label}>Perangkat Terhubung: </Text>
-				<Text style={styles.value}>3</Text>
+				<Text style={styles.value}>{deviceCount}</Text>
 			</View>
 		</View>
 	);

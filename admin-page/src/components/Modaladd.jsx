@@ -3,19 +3,20 @@ import axios from 'axios';
 import { useNavigate } from "react-router-dom";
 
 const Modaladd = ({ isvisible, onClose }) => {
-  const [nama, setNama] = useState('');
+  const [name, setName] = useState('');
   const [username, setUsername] = useState('');
-  const [passwd, setPasswd] = useState('');
+  const [password, setPassword] = useState('');
   const [ip, setIp] = useState('');
-  const [alamat, setAlamat] = useState('');
-  const [notelp, setNotelp] = useState('');
+  const [mac, setMac] = useState('');
+  const [address, setAddress] = useState('');
+  const [phone, setPhone] = useState('');
   const navigate = useNavigate();
 
   if (!isvisible) return null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const adduser = { nama, username, passwd, ip, alamat, notelp };
+    const adduser = { name, username, password, ip, mac, address, phone };
   
     try {
       const response = await axios.post('http://localhost:5000/add_user', adduser);
@@ -34,22 +35,25 @@ const Modaladd = ({ isvisible, onClose }) => {
         <h2 className="text-2xl font-bold text-center mb-4">Tambah Pengguna</h2>
         <form onSubmit={handleSubmit}>
           <label className="block mb-2 font-semibold text-base">Nama</label>
-          <input type="text" className="w-full p-2 mb-4 rounded bg-[#414C50] text-white" placeholder="Nama" value={nama} onChange={(e) => setNama(e.target.value)} />
+          <input type="text" className="w-full p-2 mb-4 rounded bg-[#414C50] text-white" placeholder="Nama" value={name} onChange={(e) => setName(e.target.value)} />
           
           <label className="block mb-2 font-semibold text-base">Username</label>
           <input type="text" className="w-full p-2 mb-4 rounded bg-[#414C50] text-white" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
           
           <label className="block mb-2 font-semibold text-base">Password</label>
-          <input type="password" className="w-full p-2 mb-4 rounded bg-[#414C50] text-white" placeholder="Password" value={passwd} onChange={(e) => setPasswd(e.target.value)} />
+          <input type="password" className="w-full p-2 mb-4 rounded bg-[#414C50] text-white" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
           
           <label className="block mb-2 font-semibold text-base">Alamat IP</label>
           <input type="text" className="w-full p-2 mb-4 rounded bg-[#414C50] text-white" placeholder="Alamat IP" value={ip} onChange={(e) => setIp(e.target.value)} />
           
+          <label className="block mb-2 font-semibold text-base">MAC</label>
+          <input type="text" className="w-full p-2 mb-4 rounded bg-[#414C50] text-white" placeholder="MAC" value={mac} onChange={(e) => setMac(e.target.value)} />
+
           <label className="block mb-2 font-semibold text-base">No. Telepon</label>
-          <input type="text" className="w-full p-2 mb-4 rounded bg-[#414C50] text-white" placeholder="No. Telepon" value={notelp} onChange={(e) => setNotelp(e.target.value)} />
+          <input type="text" className="w-full p-2 mb-4 rounded bg-[#414C50] text-white" placeholder="No. Telepon" value={phone} onChange={(e) => setPhone(e.target.value)} />
              
           <label className="block mb-2 font-semibold text-base">Alamat</label>
-          <input type="text" className="w-full p-2 mb-4 rounded bg-[#414C50] text-white" placeholder="Alamat" value={alamat} onChange={(e) => setAlamat(e.target.value)} />
+          <input type="text" className="w-full p-2 mb-4 rounded bg-[#414C50] text-white" placeholder="Alamat" value={address} onChange={(e) => setAddress(e.target.value)} />
           
           <div className="flex justify-between mt-4">
             <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-600 text-white rounded">Tutup</button>

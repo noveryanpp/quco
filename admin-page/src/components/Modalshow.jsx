@@ -4,26 +4,28 @@ import React, { useState, useEffect } from 'react';
 export default function Modalshow({ isVisible, onClose, user }) {
   if (!isVisible || !user) return null;
 
-  const [nama, setNama] = useState('');
+  const [name, setName] = useState('');
   const [username, setUsername] = useState('');
-  const [passwd, setPasswd] = useState('');
+  const [password, setPassword] = useState('');
   const [ip, setIp] = useState('');
-  const [alamat, setAlamat] = useState('');
-  const [notelp, setNotelp] = useState('');
+  const [mac, setMac] = useState('');
+  const [address, setAddress] = useState('');
+  const [phone, setPhone] = useState('');
 
   useEffect(() => {
     if (user) {
-      setNama(user.nama || '');
+      setName(user.name || '');
       setUsername(user.username || '');
-      setPasswd(user.passwd || '');
+      setPassword(user.password || '');
       setIp(user.ip || '');
-      setAlamat(user.alamat || '');
-      setNotelp(user.notelp || '');
+      setMac(user.mac || '');
+      setAddress(user.address || '');
+      setPhone(user.phone || '');
     }
   }, [user]);
 
   const handleSave = async () => {
-    const updatedUser = { nama, username, passwd, ip, alamat, notelp };
+    const updatedUser = { name, username, password, ip, mac, address, phone };
     try {
       await axios.put(`http://localhost:5000/update_user/${user.id}`, updatedUser);
       console.log('Data berhasil diperbarui');
@@ -48,12 +50,13 @@ export default function Modalshow({ isVisible, onClose, user }) {
       <div className="bg-[#2D383C] p-6 rounded-lg w-1/3">
         <h2 className="text-2xl font-semibold mb-4 text-white">Edit Pelanggan</h2>
         <div className="space-y-4">
-          {[{ label: 'Nama', value: nama, setValue: setNama },
+          {[{ label: 'Nama', value: name, setValue: setName },
             { label: 'Username', value: username, setValue: setUsername },
-            { label: 'Password', value: passwd, setValue: setPasswd, type: 'password' },
+            { label: 'Password', value: password, setValue: setPassword, type: 'password' },
             { label: 'Alamat IP', value: ip, setValue: setIp },
-            { label: 'Alamat', value: alamat, setValue: setAlamat },
-            { label: 'No. Telepon', value: notelp, setValue: setNotelp }].map(({ label, value, setValue, type = 'text' }, index) => (
+            { label: 'Alamat MAC', value: mac, setValue: setMac },
+            { label: 'Alamat', value: address, setValue: setAddress },
+            { label: 'No. Telepon', value: phone, setValue: setPhone }].map(({ label, value, setValue, type = 'text' }, index) => (
             <div key={index}>
               <label className="block mb-1 font-semibold text-base text-white">{label}</label>
               <input type={type} className="w-full p-2 rounded bg-[#414C50] text-white" value={value} onChange={(e) => setValue(e.target.value)}/>
