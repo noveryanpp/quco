@@ -50,15 +50,24 @@ def wlanGet():
 
 @mikrotik_routes.route('/api/mikrotik/device/get')
 def deviceGet():
-    command = "ip dhcp-server lease print detail"
     response = """Flags: X - disabled, R - dynamic, D - static
                 #   ADDRESS         MAC-ADDRESS       HOST-NAME       STATUS
                 0 D 192.168.1.100  AA:BB:CC:11:22:33  iPhone-11       bound
                 1 D 192.168.1.101  DD:EE:FF:44:55:66  Samsung-Galaxy  bound
-                2 D 192.168.1.102  11:22:33:44:55:66  LAPTOP-PC       bound
+                2 D 192.168.1.102  40:F0:23:CG:D2:00  Redmi-Note-9    bound
                 """
-    parsedResponse = parseOutput(response, "wlanget")
-    return jsonify(parsedResponse)
+
+    devices = []
+    for line in response.split("\n"):
+        if "bound" in line:
+            parts = line.split()
+            devices.append({
+                "ip_address": parts[2],
+                "mac_address": parts[3],
+                "device_name": parts[4].replace("-", " "),  # Ganti "-" dengan spasi untuk nama perangkat
+            })
+
+    return jsonify({"connected_devices": len(devices), "devices": devices})
 
 @mikrotik_routes.route('/api/mikrotik/expire/get')
 def expireGet():

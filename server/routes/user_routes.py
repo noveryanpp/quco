@@ -8,15 +8,15 @@ user_routes = Blueprint("user_routes", __name__)
 def add_user():
     try:
         data = request.json
-        required_fields = ["name", "username", "password", "ip", "address", "phone"]
+        required_fields = ["name", "username", "password", "ip", "mac", "address", "phone"]
         
         if not all(data.get(field) for field in required_fields):
             return jsonify({"message": "Semua data wajib diisi!"}), 400
 
         connection = get_db_connection()
         with connection.cursor() as cursor:
-            query = "INSERT INTO users (name, username, password, ip, address, phone) VALUES (%s, %s, %s, %s, %s, %s)"
-            cursor.execute(query, (data["name"], data["username"], data["password"], data["ip"], data["address"], data["phone"]))
+            query = "INSERT INTO users (name, username, password, ip, mac, address, phone) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+            cursor.execute(query, (data["name"], data["username"], data["password"], data["ip"], data["mac"], data["address"], data["phone"]))
             connection.commit()
 
         return jsonify({"message": "User berhasil ditambahkan!"}), 201
@@ -35,6 +35,27 @@ def get_users():
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 
+@user_routes.route("/auth/get_users", methods=["GET"])
+@jwt_required()
+def get_user():
+    try:
+        current_user = get_jwt_identity()  # Ambil username dari token JWT
+        connection = get_db_connection()  # Ambil koneksi database
+
+        query = "SELECT id, name, username, phone, address, ip, mac FROM users WHERE username = %s"
+        values = (current_user,)
+
+        with connection.cursor(dictionary=True) as cursor:
+            cursor.execute(query, values)
+            user = cursor.fetchone()
+
+        if user:
+            return jsonify(user), 200
+        return jsonify({"message": "User not found"}), 404
+
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
 # Update User
 @user_routes.route('/update_user/<int:user_id>', methods=['PUT'])
 def update_users(user_id):
@@ -45,10 +66,10 @@ def update_users(user_id):
         with connection.cursor() as cursor:
             sql = """
                 UPDATE users 
-                SET name=%s, username=%s, password=%s, ip=%s, address=%s, phone=%s 
+                SET name=%s, username=%s, password=%s, ip=%s, mac=%s, address=%s, phone=%s 
                 WHERE id=%s
             """
-            values = (data['name'], data['username'], data['password'], data['ip'], data['address'], data['phone'], user_id)
+            values = (data['name'], data['username'], data['password'], data['ip'], data['mac'], data['address'], data['phone'], user_id)
             cursor.execute(sql, values)
             connection.commit()
 
@@ -161,23 +182,14 @@ def update_password():
     try:
         data = request.json
         username = get_jwt_identity()  # Ambil username dari token JWT
-        old_password = data.get('old_password')
         new_password = data.get('new_password')
 
-        if not old_password or not new_password:
-            return jsonify({"message": "Password lama dan baru wajib diisi!"}), 400
+        if not new_password:
+            return jsonify({"message": "Password baru wajib diisi!"}), 400
 
         connection = get_db_connection()
         with connection.cursor() as cursor:
-            # Cek apakah password lama cocok
-            query = "SELECT password FROM users WHERE username = %s"
-            cursor.execute(query, (username,))
-            user = cursor.fetchone()
-
-            if not user or user[0] != old_password:
-                return jsonify({"message": "Password lama salah!"}), 401
-
-            # Update password baru
+            # Update password langsung tanpa perlu password lama
             update_query = "UPDATE users SET password = %s WHERE username = %s"
             cursor.execute(update_query, (new_password, username))
             connection.commit()
@@ -186,6 +198,7 @@ def update_password():
 
     except Exception as e:
         return jsonify({"message": str(e)}), 500
+
 # Edit ip 
 @user_routes.route('/update_ip', methods=['PUT'])
 @jwt_required()

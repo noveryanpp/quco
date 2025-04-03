@@ -1,20 +1,61 @@
-import React from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, Image, Alert } from "react-native";
 
 export function UserHeader() {
-	return (
-		<View style={styles.container}>
-			<Image
-				source={{
-					uri: "https://ui-avatars.com/api/?name=Noveryan&background=3498db&color=fff",
-				}}
-				style={styles.avatar}
-			/>
-			<View style={styles.info}>
-				<Text style={styles.name}>Noveryan</Text>
-			</View>
-		</View>
-	);
+  const [user, setUser] = useState({ name: "Loading..." });
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        let token = localStorage.getItem("token");
+		console.log("Token dari localStorage:", token);
+
+        
+        if (!token) {
+          Alert.alert("Error", "Token tidak ditemukan!");
+          return;
+        }
+
+        console.log("Token ditemukan:", token);
+
+		const response = await fetch("http://localhost:5000/auth/get_users", {
+			method: "GET",
+			headers: {
+			  Authorization: `Bearer ${token}`,
+			  "Content-Type": "application/json",
+			},
+		  });
+		  
+		  const data = await response.json();
+		  console.log("Response dari API:", data);
+
+        if (response.ok && data && data.name) {
+          setUser(data);
+        } else {
+          Alert.alert("Error", data.message || "Gagal mengambil data user");
+        }
+      } catch (error) {
+        console.error("Fetch user error:", error);
+        Alert.alert("Error", "Gagal mengambil data user");
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  return (
+    <View style={styles.container}>
+      <Image
+        source={{
+          uri: `https://ui-avatars.com/api/?name=${user.name}&background=3498db&color=fff`,
+        }}
+        style={styles.avatar}
+      />
+      <View style={styles.info}>
+        <Text style={styles.name}>{user.name}</Text>
+      </View>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
