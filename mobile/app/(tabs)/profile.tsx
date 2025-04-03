@@ -1,15 +1,132 @@
-import React from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+
 export default function ProfileScreen() {
+  const [user, setUser] = useState({
+    name: "",
+    username: "",
+    phone: "",
+    password: "",
+  });
+  
+  const [originalUser, setOriginalUser] = useState({});
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        let token = localStorage.getItem("token");
+        console.log("Token dari SecureStore:", token);
+
+        if (!token) {
+          Alert.alert("Error", "Token tidak ditemukan!");
+          return;
+        }
+
+        const response = await fetch("http://localhost:5000/auth/get_users", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        const data = await response.json();
+        console.log("Response dari API:", data);
+
+        if (response.ok && data.name) {
+          setUser(data);
+        } else {
+          Alert.alert("Error", data.message || "Gagal mengambil data user");
+        }
+      } catch (error) {
+        console.error("Fetch user error:", error);
+        Alert.alert("Error", "Gagal mengambil data user");
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      const token = await localStorage.getItem("token");
+      let updateRequests = [];
+  
+      if (user.name !== originalUser.name) {
+        updateRequests.push(
+          fetch("http://localhost:5000/update_name", {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ new_name: user.name }),
+          })
+        );
+      }
+  
+      if (user.username !== originalUser.username) {
+        updateRequests.push(
+          fetch("http://localhost:5000/update_username", {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ new_username: user.username }),
+          })
+        );
+      }
+  
+      if (user.phone !== originalUser.phone) {
+        updateRequests.push(
+          fetch("http://localhost:5000/update_phone", {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ new_phone: user.phone }),
+          })
+        );
+      }
+  
+      if (user.password) {
+        updateRequests.push(
+          fetch("http://localhost:5000/update_password", {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              new_password: user.password, // Hanya mengirim password baru
+            }),
+          })
+        );
+      }      
+  
+      if (updateRequests.length > 0) {
+        await Promise.all(updateRequests); // Jalankan semua request secara paralel
+        alert("Profil berhasil diperbarui!");
+        setOriginalUser(user); // Perbarui data awal setelah berhasil
+      } else {
+        alert("Tidak ada perubahan yang disimpan.");
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Edit Profil</Text>
 
       <View style={styles.avatarContainer}>
         <Image
-          source={{ uri: 'https://ui-avatars.com/api/?name=Noveryan&background=3498db&color=fff&size=120' }}
+          source={{ uri: `https://ui-avatars.com/api/?name=${user.name}&background=3498db&color=fff&size=120` }}
           style={styles.avatar}
         />
       </View>
@@ -19,7 +136,8 @@ export default function ProfileScreen() {
           <Text style={styles.label}>Nama</Text>
           <TextInput
             style={styles.input}
-            value="Noveryan"
+            value={user.name}
+            onChangeText={(text) => setUser({ ...user, name: text })}
             placeholderTextColor="#6b7280"
           />
         </View>
@@ -28,7 +146,8 @@ export default function ProfileScreen() {
           <Text style={styles.label}>Username</Text>
           <TextInput
             style={styles.input}
-            value="noveryan"
+            value={user.username}
+            onChangeText={(text) => setUser({ ...user, username: text })}
             placeholderTextColor="#6b7280"
           />
         </View>
@@ -37,25 +156,28 @@ export default function ProfileScreen() {
           <Text style={styles.label}>No. Telp</Text>
           <TextInput
             style={styles.input}
-            value="+62 812-4567-8910"
+            value={user.phone}
+            onChangeText={(text) => setUser({ ...user, phone: text })}
             placeholderTextColor="#6b7280"
             keyboardType="phone-pad"
           />
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={styles.input}
-            value="**********"
-            placeholderTextColor="#6b7280"
-            secureTextEntry
-          />
-        </View>
+        <Text style={styles.label}>Password</Text>
+        <TextInput
+          style={styles.input}
+          value={user.password}
+          placeholder='*********'
+          onChangeText={(text) => setUser({ ...user, password: text })}
+          placeholderTextColor="#6b7280"
+          secureTextEntry={true} // Menyembunyikan input password
+        />
+      </View>
 
-        <TouchableOpacity style={styles.saveButton}>
-          <Text style={styles.saveButtonText}>Simpan</Text>
-        </TouchableOpacity>
+      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+        <Text style={styles.saveButtonText}>Simpan</Text>
+      </TouchableOpacity>
       </View>
     </SafeAreaView>
   );

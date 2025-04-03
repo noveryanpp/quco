@@ -14,8 +14,6 @@ export default function SpeedTestScreen() {
 			<UserHeader />
 			<View style={styles.packagesSection}>
 				<PackageCard />
-				<PackageCard />
-				<PackageCard />
 			</View>
 		</SafeAreaView>
 	);

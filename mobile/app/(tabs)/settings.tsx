@@ -1,15 +1,79 @@
-import React from "react";
-import {
-	View,
-	Text,
-	StyleSheet,
-	TextInput,
-	TouchableOpacity,
-} from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { UserHeader } from "../../components/UserHeader";
+// import { Picker } from "@react-native-picker/picker";
 
 export default function SettingsScreen() {
+	const [user, setUser] = useState({
+		chanel: "2412",
+		password: "",
+		dns: "",
+	  });
+	const [deviceCount, setDeviceCount] = useState(0);
+	const [devices, setDevices] = useState([]);
+		useEffect(() => {
+			const fetchDevices = async () => {
+				try {
+					const response = await fetch("http://localhost:5000/api/mikrotik/device/get");
+					const data = await response.json();
+					setDevices(data.devices);
+					setDeviceCount(data.connected_devices);
+				} catch (error) {
+					console.error("Error fetching device data:", error);
+				}
+			};
+	
+			fetchDevices();
+		}, []);
+
+		const handleSave = async () => {
+			const updateRequests = [];
+		  
+			if (user.dns) {
+			  updateRequests.push(
+				fetch("http://localhost:5000/api/mikrotik/dns/edit", {
+				  method: "POST",
+				  headers: {
+					"Content-Type": "application/json",
+				  },
+				  body: JSON.stringify([{ newDNS: user.dns }]),
+				})
+			  );
+			}
+		  
+			if (user.password) {
+			  updateRequests.push(
+				fetch("http://localhost:5000/api/mikrotik/security/edit", {
+				  method: "POST",
+				  headers: {
+					"Content-Type": "application/json",
+				  },
+				  body: JSON.stringify([{ newPassword: user.password }]),
+				})
+			  );
+			}
+		  
+			// if (user.chanel) {
+			//   updateRequests.push(
+			// 	fetch("http://localhost:5000/api/mikrotik/wlan/ssid/edit", {
+			// 	  method: "POST",
+			// 	  headers: {
+			// 		"Content-Type": "application/json",
+			// 	  },
+			// 	  body: JSON.stringify([{ newFrequency: user.chanel }]),
+			// 	})
+			//   );
+			// }
+		  
+			try {
+			  await Promise.all(updateRequests);
+			  Alert.alert("Sukses", "Konfigurasi berhasil diperbarui!");
+			} catch (error) {
+			  console.error(error);
+			  Alert.alert("Error", "Terjadi kesalahan saat memperbarui konfigurasi.");
+			}
+		  };
+		  
 	return (
 		<SafeAreaView style={styles.container}>
 			<Text style={styles.title}>Quick Config</Text>
@@ -27,21 +91,26 @@ export default function SettingsScreen() {
 				<View style={styles.inputGroup}>
 					<Text style={styles.label}>Password</Text>
 					<TextInput
-						style={styles.input}
-						placeholder="Enter Password"
-						placeholderTextColor="#6b7280"
-						secureTextEntry
+					style={styles.input}
+					placeholder="Enter Password"
+					placeholderTextColor="#6b7280"
+					secureTextEntry
+					value={user.password}
+					onChangeText={(text) => setUser({ ...user, password: text })}
 					/>
 				</View>
 
 				<View style={styles.inputGroup}>
-					<Text style={styles.label}>Domain Name Server (DNS)</Text>
+					<Text style={styles.label}>DNS</Text>
 					<TextInput
-						style={styles.input}
-						placeholder="Enter DNS"
-						placeholderTextColor="#6b7280"
+					style={styles.input}
+					placeholder="Enter DNS"
+					placeholderTextColor="#6b7280"
+					value={user.dns}
+					onChangeText={(text) => setUser({ ...user, dns: text })}
 					/>
 				</View>
+
 
 				<View style={styles.inputGroup}>
 					<Text style={styles.label}>Channel</Text>
@@ -51,17 +120,16 @@ export default function SettingsScreen() {
 						placeholderTextColor="#6b7280"
 					/>
 				</View>
-
-				<TouchableOpacity style={styles.saveButton}>
+				<TouchableOpacity style={styles.saveButton} onPress={handleSave}>
 					<Text style={styles.saveButtonText}>Simpan</Text>
 				</TouchableOpacity>
 
 				<View style={styles.connectedDevices}>
-					<Text style={styles.devicesTitle}>Perangkat Terhubung : 3</Text>
+					<Text style={styles.devicesTitle}>Perangkat Terhubung : {deviceCount}</Text>
 					<View style={styles.deviceItem}>
 						<View>
-							<Text style={styles.deviceName}>Redmi Note 9</Text>
-							<Text style={styles.deviceMac}>40:f0:23:cg:d2:00</Text>
+						<Text style={styles.deviceName}>{devices.device_name}</Text>
+                        <Text style={styles.deviceMac}>{devices.mac_address}</Text>
 						</View>
 						<TouchableOpacity>
 							<Text style={styles.deviceMenu}>⋮</Text>

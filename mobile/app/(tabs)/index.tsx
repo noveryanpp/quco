@@ -21,8 +21,6 @@ export default function HomeScreen() {
 						<Text style={styles.link}>Lihat Semua</Text>
 					</View>
 					<PackageCard />
-					<PackageCard />
-					<PackageCard />
 				</View>
 			</ScrollView>
 		</SafeAreaView>

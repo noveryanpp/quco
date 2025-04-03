@@ -50,7 +50,7 @@ export default function Paket() {
   }, []);
 
   const filteredPaket = paket.filter(paket => 
-    paket.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    paket.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     paket.kecepatan.toLowerCase().includes(searchQuery.toLowerCase()) ||
     paket.harga.toString().includes(searchQuery) ||
     paket.masa_aktif.toString().includes(searchQuery)
@@ -124,7 +124,7 @@ export default function Paket() {
                 currentPaket.map((paket, index) => (
                   <tr key={paket.id} className="bg-[#2D383C] hover:bg-[#414C50] cursor-pointer"  onClick={() => { setSelectedPaket(paket); setShowModalshowpaket(true); }}>
                     <td className='p-3 text-sm text-white'>{firstindex + index + 1}</td>
-                    <td className='p-3 text-sm text-white'>{paket.nama}</td>
+                    <td className='p-3 text-sm text-white'>{paket.name}</td>
                     <td className='p-3 text-sm text-white'>{paket.kecepatan}Mbps</td>
                     <td className='p-3 text-sm text-white'>Rp. {paket.harga}</td>
                     <td className='p-3 text-sm text-white'>{paket.masa_aktif} Hari</td>

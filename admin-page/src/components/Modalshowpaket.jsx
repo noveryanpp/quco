@@ -4,14 +4,14 @@ import React, { useState, useEffect } from 'react';
 export default function Modalshow({ Visible, onClose, paket }) {
   if (!Visible || !paket) return null;
 
-  const [nama, setNama] = useState('');
+  const [name, setName] = useState('');
   const [kecepatan, setKecepatan] = useState('');
   const [harga, setHarga] = useState('');
   const [masa_aktif, setMasa_aktif] = useState('');
 
   useEffect(() => {
     if (paket) {
-      setNama(paket.nama || '');
+      setName(paket.name || '');
       setKecepatan(paket.kecepatan || '');
       setHarga(paket.harga || '');
       setMasa_aktif(paket.masa_aktif || '');
@@ -19,7 +19,7 @@ export default function Modalshow({ Visible, onClose, paket }) {
   }, [paket]);
 
   const handleSave = async () => {
-    const updatedPaket = { nama, kecepatan, harga, masa_aktif};
+    const updatedPaket = { name, kecepatan, harga, masa_aktif};
     try {
       await axios.put(`http://localhost:5000/update_paket/${paket.id}`, updatedPaket);
       console.log('Data paket berhasil diperbarui');
@@ -44,7 +44,7 @@ export default function Modalshow({ Visible, onClose, paket }) {
       <div className="bg-[#2D383C] p-6 rounded-lg w-1/3">
         <h2 className="text-2xl font-semibold mb-4 text-white">Edit Paket</h2>
         <div className="space-y-4">
-          {[{ label: 'Nama Paket', value: nama, setValue: setNama },
+          {[{ label: 'Nama Paket', value: name, setValue: setName },
             { label: 'Kecepatan', value: kecepatan, setValue: setKecepatan },
             { label: 'Harga', value: harga, setValue: setHarga },
             { label: 'Masa Aktif', value: masa_aktif, setValue: setMasa_aktif },].map(({ label, value, setValue, type = 'text' }, index) => (
