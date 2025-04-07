@@ -48,27 +48,6 @@ def get_user(user_id):
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 
-@user_routes.route("/auth/get_users", methods=["GET"])
-@jwt_required()
-def get_user():
-    try:
-        current_user = get_jwt_identity()  # Ambil username dari token JWT
-        connection = get_db_connection()  # Ambil koneksi database
-
-        query = "SELECT id, name, username, phone, address, ip, mac FROM users WHERE username = %s"
-        values = (current_user,)
-
-        with connection.cursor(dictionary=True) as cursor:
-            cursor.execute(query, values)
-            user = cursor.fetchone()
-
-        if user:
-            return jsonify(user), 200
-        return jsonify({"message": "User not found"}), 404
-
-    except Exception as e:
-        return jsonify({"message": str(e)}), 500
-
 # Update User
 @user_routes.route('/update_user/<int:user_id>', methods=['PUT'])
 def update_users(user_id):

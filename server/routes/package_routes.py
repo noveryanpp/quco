@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from db import get_db_connection
+from mikrotik import runCommand, parseOutput
 
 package_routes = Blueprint("package_routes", __name__)
 
@@ -28,6 +29,18 @@ def get_paket():
         connection = get_db_connection()
         with connection.cursor(dictionary=True) as cursor:
             cursor.execute("SELECT * FROM paket")
+            paket = cursor.fetchall()
+        return jsonify(paket), 200
+
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
+@package_routes.route('/get_paket/<int:paket_id>', methods=['GET'])
+def get_paket_by_id(paket_id):
+    try:
+        connection = get_db_connection()
+        with connection.cursor(dictionary=True) as cursor:
+            cursor.execute("SELECT * FROM paket WHERE id=%s", (paket_id,))
             paket = cursor.fetchall()
         return jsonify(paket), 200
 
@@ -73,3 +86,34 @@ def delete_paket(paket_id):
     except Exception as e:
         return jsonify({"message": str(e)}), 500
     
+
+
+def add_paket_to_user(user_id, paket_id):
+    try:
+        connection = get_db_connection()
+        with connection.cursor(dictionary=True) as cursor:
+            cursor.execute("SELECT * FROM users WHERE id=%s", (user_id,))
+            user = cursor.fetchall()
+            cursor.execute("SELECT * FROM paket WHERE id=%s", (paket_id,))
+            paket = cursor.fetchall()
+            cursor.execute("INSERT INTO paket_user(user_id,paket_id, start_at, expired_at) values(%s,%s,now(),DATE_ADD(NOW(), INTERVAL %s DAY))", (user_id,paket_id,paket[0]['masa_aktif']))
+            connection.commit()
+
+        command1 = '''/ip firewall filter add chain=forward src-address={user['ip']} action=accept comment="{user_data.username} Internet Access"
+            /queue simple add name=limit_{user_data.username} target={user_data.ip} max-limit={speed}/{speed};
+            /system scheduler add name=block_{user_data.user} start-date=[/system clock get date] start-time=00:00 interval={limit}d on-event="/ip firewall filter disable [find comment=\"{user_data.username} Internet Access\"]"
+            '''
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
+@package_routes.route('/buy_paket/', methods=["POST"])
+def buy_paket():
+    try:
+        # connection = get_db_connection()
+        # with connection.cursor(dictionary=True) as cursor:
+        #     cursor.execute("SELECT * FROM paket WHERE id=%s", (paket_id))
+        #     paket = cursor.fetchall()
+        a=add_paket_to_user(8,1)
+        return a
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
