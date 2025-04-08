@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 from mikrotik import runCommand, parseOutput
-from routes.user_routes import get_user
+from routes.user_routes import get_user, get_user_by_username
+from routes.package_routes import get_paket_by_id
 
 mikrotik_routes = Blueprint("mikrotik_routes", __name__)
 
@@ -9,19 +10,22 @@ def tambah_user(username, ip):
     command = f'/ip firewall filter add chain=forward src-address={ip} out-interface=ether1 action=drop comment="{username} Internet Access"'
     runCommand(command, 'admin')
 
-@mikrotik_routes.route('/tambah_paket_user/<int:paket_id>', methods=['POST'])
-def tambah_paket_user(paket_id):
-    user_id = request.json
-    user_data = get_user(user_id)
-    
-    
-    command1 = f'''/ip firewall filter set [find comment="{user_data.username} Internet Access"] action=accept
-                /queue simple add name=limit_{user_data.username} target={user_data.ip} max-limit={speed}/{speed}
-                /system scheduler add name=block_{user_data.user} start-date=[/system clock get date] start-time=00:00 interval={limit}d on-event="/ip firewall filter disable [find comment=\"{user_data.username} Internet Access\"]"
-                '''
-    
-    # command1 = '/ip firewall filter add chain=forward src-address=192.168.1.100 out-interface=ether1 action=drop'
+@mikrotik_routes.route('/tambah_paket_user/<int:paket_id>')
+def tambah_paket_user(username, paket_id):
+    paket = get_paket_by_id(paket_id)
+    paket_data = paket.get_json()[0]
+    user = get_user_by_username(username)
 
+    speed = paket_data["kecepatan"]
+    limit = paket_data["masa_aktif"]
+    ip = user.get_json()[0]['ip']
+    
+    command = f'''/ip firewall filter set [find comment="{username} Internet Access"] action=accept
+                /queue simple add name=limit_{username} target={ip} max-limit={speed}/{speed}
+                /system scheduler add name=block_{username} start-date=[/system clock get date] start-time=00:00 interval={limit}d on-event="/ip firewall filter set [find comment="{username} Internet Access"] action=drop"
+                '''
+
+    runCommand(command, 'admin')
 
 @mikrotik_routes.route('/api/mikrotik/ip/get')
 @jwt_required()

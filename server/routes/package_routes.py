@@ -42,7 +42,7 @@ def get_paket_by_id(paket_id):
         with connection.cursor(dictionary=True) as cursor:
             cursor.execute("SELECT * FROM paket WHERE id=%s", (paket_id,))
             paket = cursor.fetchall()
-        return jsonify(paket), 200
+        return jsonify(paket)
 
     except Exception as e:
         return jsonify({"message": str(e)}), 500
@@ -86,8 +86,6 @@ def delete_paket(paket_id):
     except Exception as e:
         return jsonify({"message": str(e)}), 500
     
-
-
 def add_paket_to_user(user_id, paket_id):
     try:
         connection = get_db_connection()

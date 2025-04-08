@@ -19,6 +19,10 @@ def add_user():
             cursor.execute(query, (data["name"], data["username"], data["password"], data["ip"], data["mac"], data["address"], data["phone"]))
             connection.commit()
 
+        from routes.mikrotik_routes import tambah_user
+
+        tambah_user(data["username"], data["ip"])
+
         return jsonify({"message": "User berhasil ditambahkan!"}), 201
     except Exception as e:
         return jsonify({"message": str(e)}), 500
@@ -41,12 +45,26 @@ def get_user(user_id):
     try:
         connection = get_db_connection()
         with connection.cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT * FROM users where id=%s", user_id)
+            cursor.execute("SELECT * FROM users where id=%s", (user_id,))
             users = cursor.fetchall()
         return jsonify(users), 200
 
     except Exception as e:
         return jsonify({"message": str(e)}), 500
+
+@user_routes.route('/get_user/<username>', methods=['GET'])
+def get_user_by_username(username):
+    try:
+        connection = get_db_connection()
+        with connection.cursor(dictionary=True) as cursor:
+            cursor.execute("SELECT * FROM users where username=%s", (username,))
+            users = cursor.fetchall()
+        return jsonify(users)
+
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
+
 
 # Update User
 @user_routes.route('/update_user/<int:user_id>', methods=['PUT'])
