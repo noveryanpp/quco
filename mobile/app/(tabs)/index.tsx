@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { UserHeader } from "../../components/UserHeader";
 import { ActivePackage } from "../../components/ActivePackage";
@@ -8,6 +9,8 @@ import { SpeedTest } from "../../components/SpeedTest";
 import { NetworkInfo } from "../../components/NetworkInfo";
 
 export default function HomeScreen() {
+	const navigation = useNavigation();
+	
 	return (
 		<SafeAreaView style={styles.container}>
 			<ScrollView>
@@ -18,7 +21,9 @@ export default function HomeScreen() {
 				<View style={styles.packagesSection}>
 					<View style={styles.header}>
 						<Text style={styles.title}>Paket untuk Anda</Text>
-						<Text style={styles.link}>Lihat Semua</Text>
+						<TouchableOpacity onPress={() => navigation.navigate("shop")}>
+							<Text style={styles.link}>Lihat Semua</Text>
+						</TouchableOpacity>
 					</View>
 					<PackageCard />
 				</View>

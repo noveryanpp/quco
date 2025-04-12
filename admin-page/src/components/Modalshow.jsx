@@ -52,7 +52,7 @@ export default function Modalshow({ isVisible, onClose, user }) {
         <div className="space-y-4">
           {[{ label: 'Nama', value: name, setValue: setName },
             { label: 'Username', value: username, setValue: setUsername },
-            { label: 'Password', value: password, setValue: setPassword, type: 'password' },
+            { label: 'Password', value: password, setValue: setPassword },
             { label: 'Alamat IP', value: ip, setValue: setIp },
             { label: 'Alamat MAC', value: mac, setValue: setMac },
             { label: 'Alamat', value: address, setValue: setAddress },

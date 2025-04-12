@@ -111,6 +111,7 @@ export default function Table() {
                 <th className='p-3 text-white text-sm font-semibold tracking-wide text-left'>No.</th>
                 <th className='p-3 text-white text-sm font-semibold tracking-wide text-left'>Nama</th>
                 <th className='p-3 text-white text-sm font-semibold tracking-wide text-left'>Username</th>
+                <th className='p-3 text-white text-sm font-semibold tracking-wide text-left'>Password</th>
 		            <th className='p-3 text-white text-sm font-semibold tracking-wide text-left'>No.Telp</th>
                 <th className='p-3 text-white text-sm font-semibold tracking-wide text-left'>IP Address</th>
                 <th className='p-3 text-white text-sm font-semibold tracking-wide text-left'>MAC Address</th>
@@ -124,6 +125,7 @@ export default function Table() {
                     <td className='p-3 text-sm text-white'>{firstindex + index + 1}</td>
                     <td className='p-3 text-sm text-white'>{user.name}</td>
                     <td className='p-3 text-sm text-white'>{user.username}</td>
+                    <td className='p-3 text-sm text-white'>{user.password}</td>
 		                <td className='p-3 text-sm text-white'>{user.phone}</td>
                     <td className='p-3 text-sm text-white'>{user.ip}</td>
                     <td className='p-3 text-sm text-white'>{user.mac}</td>

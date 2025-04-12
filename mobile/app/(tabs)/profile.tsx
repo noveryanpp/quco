@@ -10,7 +10,7 @@ export default function ProfileScreen() {
     phone: "",
     password: "",
   });
-  
+  const [showPassword, setShowPassword] = useState(false);
   const [originalUser, setOriginalUser] = useState({});
 
   useEffect(() => {
@@ -164,16 +164,31 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.inputGroup}>
-        <Text style={styles.label}>Password</Text>
-        <TextInput
-          style={styles.input}
-          value={user.password}
-          placeholder='*********'
-          onChangeText={(text) => setUser({ ...user, password: text })}
-          placeholderTextColor="#6b7280"
-          secureTextEntry={true} // Menyembunyikan input password
-        />
-      </View>
+          <Text style={styles.label}>Password</Text>
+          <View style={{ position: 'relative' }}>
+            <TextInput
+              style={[styles.input, { paddingRight: 40 }]} // ruang untuk ikon
+              value={user.password}
+              placeholder='Password'
+              onChangeText={(text) => setUser({ ...user, password: text })}
+              placeholderTextColor="#6b7280"
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity
+              onPress={() => setShowPassword(!showPassword)}
+              style={{
+                position: 'absolute',
+                right: 10,
+                top: '50%',
+                transform: [{ translateY: -10 }],
+              }}
+            >
+              <Text style={{ fontSize: 16, color:'#fff' }}>
+                {showPassword ? "Sembunyikan" : "Tampilkan"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
       <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
         <Text style={styles.saveButtonText}>Simpan</Text>
