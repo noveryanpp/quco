@@ -19,6 +19,10 @@ def add_user():
             cursor.execute(query, (data["name"], data["username"], data["password"], data["ip"], data["mac"], data["address"], data["phone"]))
             connection.commit()
 
+        from routes.mikrotik_routes import tambah_user
+
+        tambah_user(data["username"], data["ip"])
+
         return jsonify({"message": "User berhasil ditambahkan!"}), 201
     except Exception as e:
         return jsonify({"message": str(e)}), 500
@@ -34,27 +38,34 @@ def get_users():
 
     except Exception as e:
         return jsonify({"message": str(e)}), 500
-
-@user_routes.route("/auth/get_users", methods=["GET"])
-@jwt_required()
+    
+@user_routes.route('/get_user', methods=['GET'])
 def get_user():
     try:
-        current_user = get_jwt_identity()  # Ambil username dari token JWT
-        connection = get_db_connection()  # Ambil koneksi database
-
-        query = "SELECT id, name, username, password, phone, address, ip, mac FROM users WHERE username = %s"
-        values = (current_user,)
-
+        # Misalkan current_user berisi username yang sudah terdefinisi
+        connection = get_db_connection()
         with connection.cursor(dictionary=True) as cursor:
+            query = "SELECT id, name, username, password, phone, address, ip, mac FROM users WHERE username = %s"
+            values = (current_user,)  # current_user harus didefinisikan sebelumnya, misalnya melalui sesi atau JWT
             cursor.execute(query, values)
-            user = cursor.fetchone()
+            users = cursor.fetchall()
+        return jsonify(users), 200
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
 
-        if user:
-            return jsonify(user), 200
-        return jsonify({"message": "User not found"}), 404
+@user_routes.route('/get_user/<username>', methods=['GET'])
+def get_user_by_username(username):
+    try:
+        connection = get_db_connection()
+        with connection.cursor(dictionary=True) as cursor:
+            cursor.execute("SELECT * FROM users where username=%s", (username,))
+            users = cursor.fetchall()
+        return jsonify(users)
 
     except Exception as e:
         return jsonify({"message": str(e)}), 500
+
+
 
 # Update User
 @user_routes.route('/update_user/<int:user_id>', methods=['PUT'])

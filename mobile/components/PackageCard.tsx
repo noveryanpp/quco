@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Button, Modal, View, Text, StyleSheet, TouchableOpacity, FlatList } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { PackageModal } from "./PackageModal";
 
 export function PackageCard() {
   const [modalVisible, setModalVisible] = useState(false);
+  const [selectedPackageId, setSelectedPackageId] = useState(null);
   const [packages, setPackages] = useState([]);
 
   useEffect(() => {
@@ -29,43 +31,37 @@ export function PackageCard() {
     setModalVisible(false);
   };
 
+  const openModal = (id) => {
+    setSelectedPackageId(id);
+    setModalVisible(true);
+  };
+
   return (
-    <FlatList
-      data={packages}
-      keyExtractor={(item) => item.id.toString()}
-      renderItem={({ item }) => (
-        <>
-          <TouchableOpacity style={styles.container} onPress={() => setModalVisible(true)}>
-            <View style={styles.content}>
-              <View>
-                <Text style={styles.title}>{item.nama}</Text>
-                <Text style={styles.speed}>{item.kecepatan} Mbps</Text>
-                <Text style={styles.duration}>{item.masa_aktif} Hari</Text>
+    <View>
+      <FlatList
+        data={packages}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <>
+            <TouchableOpacity style={styles.container} onPress={() => openModal(item.id)}>
+              <View style={styles.content}>
+                <View>
+                  <Text style={styles.title}>{item.nama}</Text>
+                  <Text style={styles.speed}>{item.kecepatan} Mbps</Text>
+                  <Text style={styles.duration}>{item.masa_aktif} Hari</Text>
+                </View>
+                <Text style={styles.price}>Rp. {item.harga}</Text>
               </View>
-              <Text style={styles.price}>Rp. {item.harga}</Text>
-            </View>
-          </TouchableOpacity>
-          <Modal
-            animationType="slide"
-            transparent={true}
-            visible={modalVisible}
-            onRequestClose={handleClose}
-          >
-            <View style={styles.modalContainer}>
-              <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                <Ionicons name="close" size={24} color="#fff" />
-              </TouchableOpacity>
-              <View style={styles.modalContent}>
-                <Text style={styles.modalText}>Detail Paket: {item.nama}</Text>
-                <Text style={styles.modalText}>Kecepatan: {item.kecepatan}</Text>
-                <Text style={styles.modalText}>Masa Aktif: {item.masa_aktif}</Text>
-                <Text style={styles.modalText}>Harga: Rp. {item.harga}</Text>
-              </View>
-            </View>
-          </Modal>
-        </>
-      )}
-    />
+            </TouchableOpacity>
+          </>
+        )}
+      />
+      <PackageModal
+        id={selectedPackageId}
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+      />
+    </View>
   );
 }
 
@@ -102,28 +98,5 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "#fff",
-  },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "flex-end",
-    position: "absolute",
-    bottom: 0,
-    width: "100%",
-    backgroundColor: "#2d3748",
-    padding: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    overflow: "hidden",
-  },
-  modalContent: {
-    paddingTop: 32,
-  },
-  modalText: {
-    color: "#FFF",
-  },
-  closeButton: {
-    justifyContent: "flex-end",
-    width: 32,
-    height: 32,
   },
 });
