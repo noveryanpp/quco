@@ -1,16 +1,55 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert} from "react-native";
+import { ScrollView, View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Platform} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-// import { Picker } from "@react-native-picker/picker";
+import { Picker } from '@react-native-picker/picker';
 
 export default function SettingsScreen() {
 	const [user, setUser] = useState({
-		chanel: "2412",
-		password: "",
+		ssid: "",
+		chanel: "",
+		passwd: "",
 		dns: "",
 	  });
+	  
 	const [deviceCount, setDeviceCount] = useState(0);
 	const [devices, setDevices] = useState([]);
+
+		useEffect(() => {
+			const fetchUserData = async () => {
+			try {
+				let token = localStorage.getItem("token");
+				console.log("Token dari SecureStore:", token);
+		
+				if (!token) {
+				Alert.alert("Error", "Token tidak ditemukan!");
+				return;
+				}
+		
+				const response = await fetch("http://localhost:5000/auth/get_users", {
+				method: "GET",
+				headers: {
+					Authorization: `Bearer ${token}`,
+					"Content-Type": "application/json",
+				},
+				});
+		
+				const data = await response.json();
+				console.log("Response dari API:", data);
+		
+				if (response.ok && data.name) {
+				setUser(data);
+				} else {
+				Alert.alert("Error", data.message || "Gagal mengambil data user");
+				}
+			} catch (error) {
+				console.error("Fetch user error:", error);
+				Alert.alert("Error", "Gagal mengambil data user");
+			}
+			};
+		
+			fetchUserData();
+		}, []);
+		
 		useEffect(() => {
 			const fetchDevices = async () => {
 				try {
@@ -22,57 +61,123 @@ export default function SettingsScreen() {
 					console.error("Error fetching device data:", error);
 				}
 			};
-	
+		
 			fetchDevices();
 		}, []);
-
+		
 		const handleSave = async () => {
 			const updateRequests = [];
-		  
+			const token = localStorage.getItem("token");
+		
+			const headers = {
+			  "Content-Type": "application/json",
+			  Authorization: `Bearer ${token}`,
+			};
+		
+			if (user.ssid) {
+			  updateRequests.push(
+				fetch("http://localhost:5000/api/mikrotik/ssid/edit", {
+				  method: "POST",
+				  headers,
+				  body: JSON.stringify([{ newSSID: user.ssid }]),
+				})
+			  );
+			}
+		
 			if (user.dns) {
 			  updateRequests.push(
 				fetch("http://localhost:5000/api/mikrotik/dns/edit", {
 				  method: "POST",
-				  headers: {
-					"Content-Type": "application/json",
-				  },
+				  headers,
 				  body: JSON.stringify([{ newDNS: user.dns }]),
 				})
 			  );
 			}
-		  
-			if (user.password) {
+		
+			if (user.passwd) {
 			  updateRequests.push(
 				fetch("http://localhost:5000/api/mikrotik/security/edit", {
 				  method: "POST",
-				  headers: {
-					"Content-Type": "application/json",
-				  },
-				  body: JSON.stringify([{ newPassword: user.password }]),
+				  headers,
+				  body: JSON.stringify([{ newPasswd: user.passwd }]),
 				})
 			  );
 			}
-		  
-			// if (user.chanel) {
-			//   updateRequests.push(
-			// 	fetch("http://localhost:5000/api/mikrotik/wlan/ssid/edit", {
-			// 	  method: "POST",
-			// 	  headers: {
-			// 		"Content-Type": "application/json",
-			// 	  },
-			// 	  body: JSON.stringify([{ newFrequency: user.chanel }]),
-			// 	})
-			//   );
-			// }
-		  
-			try {
-			  await Promise.all(updateRequests);
-			  Alert.alert("Sukses", "Konfigurasi berhasil diperbarui!");
-			} catch (error) {
-			  console.error(error);
-			  Alert.alert("Error", "Terjadi kesalahan saat memperbarui konfigurasi.");
+		
+			if (user.chanel) {
+			  updateRequests.push(
+				fetch("http://localhost:5000/api/mikrotik/chanel/edit", {
+				  method: "POST",
+				  headers,
+				  body: JSON.stringify([{ newFrequency: user.chanel }]),
+				})
+			  );
 			}
-		  };
+		
+			try {
+				await Promise.all(updateRequests);
+				window.alert("Konfigurasi berhasil diperbarui!");
+			  } catch (error) {
+				console.error("Error saat menyimpan:", error);
+				window.alert("Terjadi kesalahan saat memperbarui konfigurasi.");
+			  }
+			};
+	  
+
+		const handleBlockUser = (mac_address) => {
+		if (Platform.OS === "web") {
+			const confirmed = window.confirm("Apakah Anda ingin memblokir pengguna?");
+			if (confirmed) {
+			sendBlockRequest(mac_address); // ✅ pastikan parameternya mac_address
+			}
+		} else {
+			Alert.alert(
+			"Konfirmasi",
+			"Apakah Anda ingin memblokir pengguna?",
+			[
+				{ text: "Batal", style: "cancel" },
+				{ text: "Blokir", onPress: () => sendBlockRequest(mac_address) },
+			],
+			{ cancelable: true }
+			);
+		}
+		};
+
+		const sendBlockRequest = async (mac_address) => {
+		try {
+			const token = localStorage.getItem("token");
+			const headers = {
+			"Content-Type": "application/json",
+			Authorization: `Bearer ${token}`,
+			};
+
+			const response = await fetch("http://localhost:5000/api/mikrotik/wlan/device/block", {
+			method: "POST",
+			headers,
+			body: JSON.stringify([{ mac_address }]), // ✅ UBAH KEYNYA DI SINI
+			});
+
+			const result = await response.json();
+			console.log("Block result:", result);
+
+			if (response.ok && result.status === "success") {
+			Platform.OS === "web"
+				? window.alert("Perangkat berhasil diblokir!")
+				: Alert.alert("Sukses", "Perangkat berhasil diblokir!");
+			} else {
+			Platform.OS === "web"
+				? window.alert("Gagal memblokir perangkat: " + (result.message || "Unknown error"))
+				: Alert.alert("Gagal", result.message || "Gagal memblokir perangkat");
+			}
+		} catch (error) {
+			console.error("Error blocking device:", error);
+			Platform.OS === "web"
+			? window.alert("Terjadi kesalahan saat memblokir perangkat.")
+			: Alert.alert("Error", "Terjadi kesalahan saat memblokir perangkat.");
+		}
+		};
+
+
 		  
 	return (
 		<SafeAreaView style={styles.container}>
@@ -82,9 +187,11 @@ export default function SettingsScreen() {
 				<View style={styles.inputGroup}>
 					<Text style={styles.label}>Service Set Identifier (SSID)</Text>
 					<TextInput
-						style={styles.input}
-						placeholder="Enter SSID"
-						placeholderTextColor="#6b7280"
+					style={styles.input}
+					placeholder="Enter SSID"
+					placeholderTextColor="#6b7280"
+					value={user.ssid}
+					onChangeText={(text) => setUser({ ...user, ssid: text })}
 					/>
 				</View>
 
@@ -95,8 +202,8 @@ export default function SettingsScreen() {
 					placeholder="Enter Password"
 					placeholderTextColor="#6b7280"
 					secureTextEntry
-					value={user.password}
-					onChangeText={(text) => setUser({ ...user, password: text })}
+					value={user.passwd}
+					onChangeText={(text) => setUser({ ...user, passwd: text })}
 					/>
 				</View>
 
@@ -111,30 +218,52 @@ export default function SettingsScreen() {
 					/>
 				</View>
 
-
 				<View style={styles.inputGroup}>
-					<Text style={styles.label}>Channel</Text>
-					<TextInput
-						style={styles.input}
-						value="3231"
-						placeholderTextColor="#6b7280"
-					/>
+				<Text style={styles.label}>Channel</Text>
+				<View style={styles.input}>
+					<Picker
+					selectedValue={user.chanel}
+					onValueChange={(itemValue) =>
+						setUser({ ...user, chanel: itemValue })
+					}
+					style={{
+						color: '#fff',
+						fontSize: 16,
+						width: '100%',
+						backgroundColor: 'transparent', // biar match dengan parent view
+						borderWidth: 0,
+					}}
+					dropdownIconColor="#fff"
+					>
+						<Picker.Item label="2412" value="2412"/>
+						<Picker.Item label="2417" value="2417"/>
+						<Picker.Item label="2422" value="2422"/>
+						<Picker.Item label="2427" value="2427"/>
+						<Picker.Item label="2432" value="2432"/>
+					</Picker>
 				</View>
+				</View>
+
 				<TouchableOpacity style={styles.saveButton} onPress={handleSave}>
 					<Text style={styles.saveButtonText}>Simpan</Text>
 				</TouchableOpacity>
+{/* <Text style={styles.label}>Login sebagai: {user.ip}</Text> */}
 
 				<View style={styles.connectedDevices}>
 					<Text style={styles.devicesTitle}>Perangkat Terhubung : {deviceCount}</Text>
-					<View style={styles.deviceItem}>
+					<ScrollView style={{ maxHeight: 100 }}>
+					{devices.map((device, index) => (
+						<View key={index} style={styles.deviceItem}>
 						<View>
-						<Text style={styles.deviceName}>{devices.device_name}</Text>
-                        <Text style={styles.deviceMac}>{devices.mac_address}</Text>
+							<Text style={styles.deviceName}>{device.device_name}</Text>
+							<Text style={styles.deviceMac}>{device.mac_address}</Text>
 						</View>
-						<TouchableOpacity>
-							<Text style={styles.deviceMenu}>⋮</Text>
+						<TouchableOpacity onPress={() => handleBlockUser(device.mac_address)}>
+							<Text style={styles.deviceMenu}>🚫</Text>
 						</TouchableOpacity>
-					</View>
+						</View>
+					))}
+					</ScrollView>
 				</View>
 			</View>
 		</SafeAreaView>
@@ -198,6 +327,7 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
+		marginBottom: 10,
 	},
 	deviceName: {
 		color: "#fff",
@@ -212,5 +342,6 @@ const styles = StyleSheet.create({
 	deviceMenu: {
 		color: "#fff",
 		fontSize: 24,
+		paddingRight: 7,
 	},
 });

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Image, Alert } from "react-native";
 
 export function UserHeader() {
-  const [user, setUser] = useState({ name: "Loading..." });
+  const [user, setUser] = useState({ name: "Unknown" });
 
   useEffect(() => {
     const fetchUserData = async () => {

@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from db import get_db_connection
 
 user_routes = Blueprint("user_routes", __name__)
-
+    
 @user_routes.route("/add_user", methods=["POST"])
 def add_user():
     try:
@@ -39,16 +39,17 @@ def get_users():
     except Exception as e:
         return jsonify({"message": str(e)}), 500
     
-@user_routes.route('/get_user/<int:user_id>', methods=['GET'])
-def get_user(user_id):
-    
+@user_routes.route('/get_user', methods=['GET'])
+def get_user():
     try:
+        # Misalkan current_user berisi username yang sudah terdefinisi
         connection = get_db_connection()
         with connection.cursor(dictionary=True) as cursor:
-            cursor.execute("SELECT * FROM users where id=%s", (user_id,))
+            query = "SELECT id, name, username, password, phone, address, ip, mac FROM users WHERE username = %s"
+            values = (current_user,)  # current_user harus didefinisikan sebelumnya, misalnya melalui sesi atau JWT
+            cursor.execute(query, values)
             users = cursor.fetchall()
         return jsonify(users), 200
-
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 

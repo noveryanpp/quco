@@ -1,54 +1,53 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
 export function NetworkInfo() {
 	const [ssid, setSsid] = useState("");
 	const [password, setPassword] = useState("");
 	const [deviceCount, setDeviceCount] = useState(0);
+	const [showPassword, setShowPassword] = useState(false);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await fetch("http://localhost:5000/api/mikrotik/wlan/get");
-                const data = await response.json();
-                setSsid(data.SSID || "Tidak ditemukan");
-            } catch (error) {
-                console.error("Error fetching SSID:", error);
-            }
-        };
+	useEffect(() => {
+		const fetchData = async () => {
+			try {
+				const response = await fetch("http://localhost:5000/api/mikrotik/wlan/get");
+				const data = await response.json();
+				setSsid(data["SSID"] || "Tidak ditemukan");
+			} catch (error) {
+				console.error("Error fetching SSID:", error);
+			}
+		};
 
-        fetchData();
-    }, []);
+		fetchData();
+	}, []);
 
+	useEffect(() => {
+		const fetchSecurity = async () => {
+			try {
+				const response = await fetch("http://localhost:5000/api/mikrotik/security/get");
+				const data = await response.json();
+				setPassword(data["wpa2-pre-shared-key"] || "N/A");
+			} catch (error) {
+				console.error("Error fetching security data:", error);
+			}
+		};
 
-    useEffect(() => {
-        const fetchSecurity = async () => {
-            try {
-                const response = await fetch("http://localhost:5000/api/mikrotik/security/get");
-                const data = await response.json();
-                setPassword(data["wpa2-pre-shared-key"] || "N/A");
-            } catch (error) {
-                console.error("Error fetching security data:", error);
-            }
-        };
+		fetchSecurity();
+	}, []);
 
-        fetchSecurity();
-    }, []);
+	useEffect(() => {
+		const fetchDevices = async () => {
+			try {
+				const response = await fetch("http://localhost:5000/api/mikrotik/device/get");
+				const data = await response.json();
+				setDeviceCount(data.connected_devices);
+			} catch (error) {
+				console.error("Error fetching device data:", error);
+			}
+		};
 
-
-    useEffect(() => {
-        const fetchDevices = async () => {
-            try {
-                const response = await fetch("http://localhost:5000/api/mikrotik/device/get");
-                const data = await response.json();
-                setDeviceCount(data.connected_devices);
-            } catch (error) {
-                console.error("Error fetching device data:", error);
-            }
-        };
-
-        fetchDevices();
-    }, []);
+		fetchDevices();
+	}, []);
 
 	return (
 		<View style={styles.container}>
@@ -58,7 +57,14 @@ export function NetworkInfo() {
 			</View>
 			<View style={styles.infoItem}>
 				<Text style={styles.label}>Password: </Text>
-				<Text style={styles.value}>{password}</Text>
+				<Text style={styles.value}>
+					{showPassword ? password : "••••••••"}
+				</Text>
+				<TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+					<Text style={styles.eyeIcon}>
+						{showPassword ? "🙈" : "👁️"}
+					</Text>
+				</TouchableOpacity>
 			</View>
 			<View style={styles.infoItem}>
 				<Text style={styles.label}>Perangkat Terhubung: </Text>
@@ -74,6 +80,7 @@ const styles = StyleSheet.create({
 	},
 	infoItem: {
 		flexDirection: "row",
+		alignItems: "center",
 		marginBottom: 8,
 	},
 	label: {
@@ -84,5 +91,9 @@ const styles = StyleSheet.create({
 	value: {
 		color: "#fff",
 		fontSize: 16,
+	},
+	eyeIcon: {
+		fontSize: 18,
+		marginLeft: 8,
 	},
 });
