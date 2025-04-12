@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from db import get_db_connection
 
 user_routes = Blueprint("user_routes", __name__)
-
+    
 @user_routes.route("/add_user", methods=["POST"])
 def add_user():
     try:
@@ -42,7 +42,7 @@ def get_user():
         current_user = get_jwt_identity()  # Ambil username dari token JWT
         connection = get_db_connection()  # Ambil koneksi database
 
-        query = "SELECT id, name, username, phone, address, ip, mac FROM users WHERE username = %s"
+        query = "SELECT id, name, username, password, phone, address, ip, mac FROM users WHERE username = %s"
         values = (current_user,)
 
         with connection.cursor(dictionary=True) as cursor:
