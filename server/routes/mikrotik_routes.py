@@ -23,59 +23,131 @@ def dnsGet():
     parsedResponse = parseOutput(response, "dnsget")
     return jsonify(parsedResponse)
 
+# @mikrotik_routes.route('/api/mikrotik/security/get')
+# def securityGet():
+#     command = 'interface wireless security-profiles print where name="default"'
+#     response = '''Flags: * - default 
+#         0   name="default"
+#             mode=dynamic-keys
+#             authentication-types=wpa2-psk
+#             unicast-ciphers=aes-ccm
+#             group-ciphers=aes-ccm
+#             wpa-pre-shared-key="mypassword123"
+#             wpa2-pre-shared-key="mypassword123"
+#             supplicant-identity="MikroTik"'''
+#     parsedResponse = parseOutput(response, "securityget")
+#     return jsonify(parsedResponse)
+
 @mikrotik_routes.route('/api/mikrotik/security/get')
+@jwt_required()
 def securityGet():
-    command = 'interface wireless security-profiles print where name="default"'
-    response = '''Flags: * - default 
-        0   name="default"
-            mode=dynamic-keys
-            authentication-types=wpa2-psk
-            unicast-ciphers=aes-ccm
-            group-ciphers=aes-ccm
-            wpa-pre-shared-key="mypassword123"
-            wpa2-pre-shared-key="mypassword123"
-            supplicant-identity="MikroTik"'''
-    parsedResponse = parseOutput(response, "securityget")
-    return jsonify(parsedResponse)
+    try:
+        user = get_jwt_identity()
+        command = 'interface wireless security-profiles print where name="default"'
+        output = runCommand(command, user)
+
+        if isinstance(output, dict) and "error" in output:
+            return jsonify({
+                "status": "error",
+                "command": command,
+                "output": output
+            }), 500
+
+        parsedResponse = parseOutput(output, "securityget")
+        return jsonify(parsedResponse)
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+# @mikrotik_routes.route('/api/mikrotik/wlan/get')
+# def wlanGet():
+#     command = 'interface wireless print where name="wlan1"'
+#     response = """Flags: X - disabled, R - running 
+#         #    NAME       MTU   MAC-ADDRESS       MODE       SSID          CHANNEL   
+#         0  R wlan1      1500  64:D1:54:A1:B2:C3 ap-bridge  Mujiasih        2412/20MHz 
+#         """
+#     parsedResponse = parseOutput(response, "wlanget")
+#     return jsonify(parsedResponse)
 
 @mikrotik_routes.route('/api/mikrotik/wlan/get')
+@jwt_required()
 def wlanGet():
-    command = 'interface wireless print where name="wlan1"'
-    response = """Flags: X - disabled, R - running 
-        #    NAME       MTU   MAC-ADDRESS       MODE       SSID          CHANNEL   
-        0  R wlan1      1500  64:D1:54:A1:B2:C3 ap-bridge  Mujiasih        2412/20MHz 
-        """
-    parsedResponse = parseOutput(response, "wlanget")
-    return jsonify(parsedResponse)
+    try:
+        user = get_jwt_identity()
+        command = 'interface wireless print where name="wlan1"'
+        
+        output = runCommand(command, user)
+        
+        if isinstance(output, dict) and "error" in output:
+            return jsonify({
+                "status": "error",
+                "command": command,
+                "output": output
+            }), 500
+        
+        parsedResponse = parseOutput(output, "wlanget")
+        return jsonify(parsedResponse)
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+# # @mikrotik_routes.route('/api/mikrotik/device/get')
+# # def deviceGet():
+#     response = """Flags: X - disabled, R - dynamic, D - static
+#                 #   ADDRESS         MAC-ADDRESS       HOST-NAME       STATUS
+#                 0 D 192.168.1.100  AA:BB:CC:11:22:33  iPhone-11       bound
+#                 1 D 192.168.1.101  DD:EE:FF:44:55:66  Samsung-Galaxy  bound
+#                 2 D 192.168.1.102  40:F0:23:CG:D2:00  Redmi-Note-9    bound
+#                 2 D 192.168.1.102  40:F0:23:CG:D2:00  Usehhhhhhhhh    bound
+#                 """
+
+#     devices = []
+#     for line in response.split("\n"):
+#         if "bound" in line:
+#             parts = line.split()
+#             devices.append({
+#                 "ip_address": parts[2],
+#                 "mac_address": parts[3],
+#                 "device_name": parts[4].replace("-", " "),  # Ganti "-" dengan spasi untuk nama perangkat
+#             })
+
+#     return jsonify({"connected_devices": len(devices), "devices": devices})
 
 @mikrotik_routes.route('/api/mikrotik/device/get')
+@jwt_required()
 def deviceGet():
-    response = """Flags: X - disabled, R - dynamic, D - static
-                #   ADDRESS         MAC-ADDRESS       HOST-NAME       STATUS
-                0 D 192.168.1.100  AA:BB:CC:11:22:33  iPhone-11       bound
-                1 D 192.168.1.101  DD:EE:FF:44:55:66  Samsung-Galaxy  bound
-                2 D 192.168.1.102  40:F0:23:CG:D2:00  Redmi-Note-9    bound
-                2 D 192.168.1.102  40:F0:23:CG:D2:00  Redmi-Note-9    bound
-                2 D 192.168.1.102  40:F0:23:CG:D2:00  Redmi-Note-9    bound
-                2 D 192.168.1.102  40:F0:23:CG:D2:00  Redmi-Note-9    bound
-                2 D 192.168.1.102  40:F0:23:CG:D2:00  Redmi-Note-9    bound
-                2 D 192.168.1.102  40:F0:23:CG:D2:00  Redmi-Note-9    bound
-                2 D 192.168.1.102  40:F0:23:CG:D2:00  Redmi-Note-9    bound
-                2 D 192.168.1.102  40:F0:23:CG:D2:00  Redmi-Note-9    bound
-                2 D 192.168.1.102  40:F0:23:CG:D2:00  Usehhhhhhhhh    bound
-                """
+    try:
+        user = get_jwt_identity()
+        command = "/ip dhcp-server lease print"
 
-    devices = []
-    for line in response.split("\n"):
-        if "bound" in line:
-            parts = line.split()
-            devices.append({
-                "ip_address": parts[2],
-                "mac_address": parts[3],
-                "device_name": parts[4].replace("-", " "),  # Ganti "-" dengan spasi untuk nama perangkat
-            })
+        output = runCommand(command, user)
 
-    return jsonify({"connected_devices": len(devices), "devices": devices})
+        if isinstance(output, dict) and "error" in output:
+            return jsonify({
+                "status": "error",
+                "command": command,
+                "output": output
+            }), 500
+
+        devices = []
+        for line in output.split("\n"):
+            if "bound" in line:
+                parts = line.split()
+                if len(parts) >= 5:
+                    devices.append({
+                        "ip_address": parts[2],
+                        "mac_address": parts[3],
+                        "device_name": parts[4].replace("-", " "),
+                    })
+
+        return jsonify({
+            "connected_devices": len(devices),
+            "devices": devices
+        })
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 
 @mikrotik_routes.route('/api/mikrotik/expire/get')
 def expireGet():
