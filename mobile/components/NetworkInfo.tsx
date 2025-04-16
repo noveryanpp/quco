@@ -10,44 +10,69 @@ export function NetworkInfo() {
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
-				const response = await fetch("http://localhost:5000/api/mikrotik/wlan/get");
+				const token = localStorage.getItem("token");
+	
+				const response = await fetch("http://localhost:5000/api/mikrotik/wlan/get", {
+					method: "GET",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${token}`,
+					},
+				});
+	
 				const data = await response.json();
 				setSsid(data["SSID"] || "Tidak ditemukan");
 			} catch (error) {
 				console.error("Error fetching SSID:", error);
 			}
 		};
-
+	
 		fetchData();
 	}, []);
+	
 
 	useEffect(() => {
 		const fetchSecurity = async () => {
 			try {
-				const response = await fetch("http://localhost:5000/api/mikrotik/security/get");
+				const token = localStorage.getItem("token");
+				const response = await fetch("http://localhost:5000/api/mikrotik/security/get", {
+					method: "GET",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${token}`,
+					},
+				});
 				const data = await response.json();
 				setPassword(data["wpa2-pre-shared-key"] || "N/A");
 			} catch (error) {
 				console.error("Error fetching security data:", error);
 			}
 		};
-
+	
 		fetchSecurity();
 	}, []);
-
+	
 	useEffect(() => {
 		const fetchDevices = async () => {
 			try {
-				const response = await fetch("http://localhost:5000/api/mikrotik/device/get");
+				const token = localStorage.getItem("token");
+				const response = await fetch("http://localhost:5000/api/mikrotik/device/get", {
+					method: "GET",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${token}`,
+					},
+				});
 				const data = await response.json();
 				setDeviceCount(data.connected_devices);
 			} catch (error) {
 				console.error("Error fetching device data:", error);
 			}
 		};
-
+	
 		fetchDevices();
 	}, []);
+	
 
 	return (
 		<View style={styles.container}>
