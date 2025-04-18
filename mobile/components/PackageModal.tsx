@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { API_BASE_URL } from "@/utils/api";
 
 export function PackageModal({ id, visible, onClose }) {
   const [item, setItem] = useState(null);
@@ -11,7 +12,7 @@ export function PackageModal({ id, visible, onClose }) {
       if (!id) return;
 
       try {
-        const response = await fetch(`http://localhost:5000/get_paket/${id}`);
+        const response = await fetch(`${API_BASE_URL}/get_paket/${id}`);
         const data = await response.json();
         setItem(data[0]);
       } catch (error) {
@@ -27,7 +28,7 @@ export function PackageModal({ id, visible, onClose }) {
     setIsBuying(true);
 
     try {
-      const response = await fetch("http://localhost:5000/buy_package", {
+      const response = await fetch(`${API_BASE_URL}/buy_package`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

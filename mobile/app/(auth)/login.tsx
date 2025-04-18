@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, Alert } fro
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 import { useNavigation } from "@react-navigation/native";
+import { API_BASE_URL } from "@/utils/api";
+
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -19,7 +21,7 @@ export default function Login() {
     }
 
     try {
-      const response: Response = await fetch("http://localhost:5000/auth/login", {
+      const response: Response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),

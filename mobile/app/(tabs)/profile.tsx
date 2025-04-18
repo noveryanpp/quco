@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { API_BASE_URL } from "@/utils/api";
 
 
 export default function ProfileScreen() {
@@ -24,7 +25,7 @@ export default function ProfileScreen() {
           return;
         }
 
-        const response = await fetch("http://localhost:5000/auth/get_users", {
+        const response = await fetch(`${API_BASE_URL}/auth/get_users`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -56,7 +57,7 @@ export default function ProfileScreen() {
   
       if (user.name !== originalUser.name) {
         updateRequests.push(
-          fetch("http://localhost:5000/update_name", {
+          fetch(`${API_BASE_URL}/update_name`, {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
@@ -69,7 +70,7 @@ export default function ProfileScreen() {
   
       if (user.username !== originalUser.username) {
         updateRequests.push(
-          fetch("http://localhost:5000/update_username", {
+          fetch(`${API_BASE_URL}/update_username`, {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
@@ -82,7 +83,7 @@ export default function ProfileScreen() {
   
       if (user.phone !== originalUser.phone) {
         updateRequests.push(
-          fetch("http://localhost:5000/update_phone", {
+          fetch(`${API_BASE_URL}/update_phone`, {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
@@ -95,7 +96,7 @@ export default function ProfileScreen() {
   
       if (user.password) {
         updateRequests.push(
-          fetch("http://localhost:5000/update_password", {
+          fetch(`${API_BASE_URL}/update_password`, {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",

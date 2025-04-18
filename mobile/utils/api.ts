@@ -1,7 +1,7 @@
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
-const API_BASE_URL = "https://api-scourse.sijabridge.com"; 
+export const API_BASE_URL = "https://api-quco.sijabridge.com"; 
 
 // Create Axios instance
 const api = axios.create({

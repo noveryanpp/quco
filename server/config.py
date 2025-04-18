@@ -1,9 +1,18 @@
 import os
 from dotenv import load_dotenv
 from pathlib import Path
+from midtransclient import Snap
+
+# Use sandbox credentials first!
 
 dotenv_path = Path(".env")
 load_dotenv(dotenv_path=dotenv_path)
+
+snap = Snap(
+    is_production=False,
+    server_key=os.getenv("MIDTRANS_SERVER_KEY"),
+    client_key=os.getenv("MIDTRANS_CLIENT_KEY")
+)
 
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "supersecretkey")
@@ -18,3 +27,4 @@ class Config:
     MIKROTIK_HOST = os.getenv("MIKROTIK_HOST")
     MIKROTIK_USER = os.getenv("MIKROTIK_USER")
     MIKROTIK_PASS = os.getenv("MIKROTIK_PASS")
+

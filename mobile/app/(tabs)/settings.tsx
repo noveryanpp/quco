@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { ScrollView, View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Platform} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Picker } from '@react-native-picker/picker';
+import { API_BASE_URL } from "@/utils/api";
+
 
 export default function SettingsScreen() {
 	const [user, setUser] = useState({
@@ -13,6 +15,7 @@ export default function SettingsScreen() {
 	  
 	const [deviceCount, setDeviceCount] = useState(0);
 	const [devices, setDevices] = useState([]);
+	const [loading, setLoading] = useState(true);
 
 		useEffect(() => {
 			const fetchUserData = async () => {
@@ -25,7 +28,7 @@ export default function SettingsScreen() {
 				return;
 				}
 		
-				const response = await fetch("http://localhost:5000/auth/get_users", {
+				const response = await fetch(`${API_BASE_URL}/auth/get_users`, {
 				method: "GET",
 				headers: {
 					Authorization: `Bearer ${token}`,
@@ -53,12 +56,14 @@ export default function SettingsScreen() {
 		useEffect(() => {
 			const fetchDevices = async () => {
 				try {
-					const response = await fetch("http://localhost:5000/api/mikrotik/device/get");
+					const response = await fetch(`${API_BASE_URL}/api/mikrotik/device/get`);
 					const data = await response.json();
 					setDevices(data.devices);
 					setDeviceCount(data.connected_devices);
+					setLoading(false);
 				} catch (error) {
 					console.error("Error fetching device data:", error);
+					setLoading(false);
 				}
 			};
 		
@@ -76,7 +81,7 @@ export default function SettingsScreen() {
 		
 			if (user.ssid) {
 			  updateRequests.push(
-				fetch("http://localhost:5000/api/mikrotik/ssid/edit", {
+				fetch(`${API_BASE_URL}/api/mikrotik/ssid/edit`, {
 				  method: "POST",
 				  headers,
 				  body: JSON.stringify([{ newSSID: user.ssid }]),
@@ -86,7 +91,7 @@ export default function SettingsScreen() {
 		
 			if (user.dns) {
 			  updateRequests.push(
-				fetch("http://localhost:5000/api/mikrotik/dns/edit", {
+				fetch(`${API_BASE_URL}/api/mikrotik/dns/edit`, {
 				  method: "POST",
 				  headers,
 				  body: JSON.stringify([{ newDNS: user.dns }]),
@@ -96,7 +101,7 @@ export default function SettingsScreen() {
 		
 			if (user.passwd) {
 			  updateRequests.push(
-				fetch("http://localhost:5000/api/mikrotik/security/edit", {
+				fetch(`${API_BASE_URL}/api/mikrotik/security/edit`, {
 				  method: "POST",
 				  headers,
 				  body: JSON.stringify([{ newPasswd: user.passwd }]),
@@ -106,7 +111,7 @@ export default function SettingsScreen() {
 		
 			if (user.chanel) {
 			  updateRequests.push(
-				fetch("http://localhost:5000/api/mikrotik/chanel/edit", {
+				fetch(`${API_BASE_URL}/api/mikrotik/chanel/edit`, {
 				  method: "POST",
 				  headers,
 				  body: JSON.stringify([{ newFrequency: user.chanel }]),
@@ -151,7 +156,7 @@ export default function SettingsScreen() {
 			Authorization: `Bearer ${token}`,
 			};
 
-			const response = await fetch("http://localhost:5000/api/mikrotik/wlan/device/block", {
+			const response = await fetch(`${API_BASE_URL}/api/mikrotik/wlan/device/block`, {
 			method: "POST",
 			headers,
 			body: JSON.stringify([{ mac_address }]), // ✅ UBAH KEYNYA DI SINI
@@ -181,7 +186,7 @@ export default function SettingsScreen() {
 		  
 	return (
 		<SafeAreaView style={styles.container}>
-			<Text style={styles.title}>Quick Config</Text>
+			<Text style={styles.title}>Settings</Text>
 
 			<View style={styles.form}>
 				<View style={styles.inputGroup}>
@@ -252,7 +257,8 @@ export default function SettingsScreen() {
 				<View style={styles.connectedDevices}>
 					<Text style={styles.devicesTitle}>Perangkat Terhubung : {deviceCount}</Text>
 					<ScrollView style={{ maxHeight: 100 }}>
-					{devices.map((device, index) => (
+					{!devices ? <Text style={styles.deviceName}>Tidak ada perangkat yang terhubung</Text> :
+					devices.map((device, index) => (
 						<View key={index} style={styles.deviceItem}>
 						<View>
 							<Text style={styles.deviceName}>{device.device_name}</Text>

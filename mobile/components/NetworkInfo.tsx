@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { API_BASE_URL } from "@/utils/api";
 
 export function NetworkInfo() {
 	const [ssid, setSsid] = useState("");
@@ -12,7 +13,7 @@ export function NetworkInfo() {
 			try {
 				const token = localStorage.getItem("token");
 	
-				const response = await fetch("http://localhost:5000/api/mikrotik/wlan/get", {
+				const response = await fetch(`${API_BASE_URL}/api/mikrotik/wlan/get`, {
 					method: "GET",
 					headers: {
 						"Content-Type": "application/json",
@@ -35,7 +36,7 @@ export function NetworkInfo() {
 		const fetchSecurity = async () => {
 			try {
 				const token = localStorage.getItem("token");
-				const response = await fetch("http://localhost:5000/api/mikrotik/security/get", {
+				const response = await fetch(`${API_BASE_URL}/api/mikrotik/security/get`, {
 					method: "GET",
 					headers: {
 						"Content-Type": "application/json",
@@ -56,7 +57,7 @@ export function NetworkInfo() {
 		const fetchDevices = async () => {
 			try {
 				const token = localStorage.getItem("token");
-				const response = await fetch("http://localhost:5000/api/mikrotik/device/get", {
+				const response = await fetch(`${API_BASE_URL}/api/mikrotik/device/get`, {
 					method: "GET",
 					headers: {
 						"Content-Type": "application/json",

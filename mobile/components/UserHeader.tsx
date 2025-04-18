@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Image, Alert } from "react-native";
+import { API_BASE_URL } from "@/utils/api";
 
 export function UserHeader() {
   const [user, setUser] = useState({ name: "Unknown" });
@@ -18,7 +19,7 @@ export function UserHeader() {
 
         console.log("Token ditemukan:", token);
 
-		const response = await fetch("http://localhost:5000/auth/get_users", {
+		const response = await fetch(`${API_BASE_URL}/auth/get_users`, {
 			method: "GET",
 			headers: {
 			  Authorization: `Bearer ${token}`,
